@@ -1,4 +1,7 @@
 {
-  "csvFile.py": "https://raw.githubusercontent.com/burasate/RaspberyPi4_BeeHive/main/update/csvFile.py",
-  "gSheet.py": "https://raw.githubusercontent.com/burasate/RaspberyPi4_BeeHive/main/update/gSheet.py"
+  "csvFile.py": "https://raw.githubusercontent.com/burasate/StockPy/main/update/csvFile.py",
+  "gSheet.py": "https://raw.githubusercontent.com/burasate/StockPy/main/update/gSheet.py",
+  "lineNotify.py": "https://raw.githubusercontent.com/burasate/StockPy/main/update/lineNotify.py",
+  "main.py": "https://raw.githubusercontent.com/burasate/StockPy/main/update/main.py",
+  "update.py": "https://raw.githubusercontent.com/burasate/StockPy/main/update/update.py"
 }
