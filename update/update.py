@@ -25,12 +25,10 @@ def updateAllFile(*_):
             connectStatus = requests.get(url).status_code
             print('connecting...')
             if connectStatus == 200:
-                """
                 mainWriter = open(rootPath + os.sep + file, 'w')
                 urlReader = requests.get(url).text
                 mainWriter.writelines(urlReader)
                 mainWriter.close()
-                """
                 break
     print('System Updated')
 
