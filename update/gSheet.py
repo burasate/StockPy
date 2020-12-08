@@ -1,11 +1,10 @@
 import gspread,csv,os
 from oauth2client.service_account import ServiceAccountCredentials
 
-#rootPath = 'D:/GoogleDrive/Documents/2020/Beehive_Iot/BeehivePy'
 rootPath = os.path.dirname(os.path.abspath(__file__))
 dataPath = rootPath+'/data'
-jsonKeyPath = dataPath + '/brsHiveGSheet.json'
-sheetName = 'Beehive_Iot'
+jsonKeyPath = dataPath + '/stockPyGSheet.json'
+sheetName = 'StockPy'
 
 def connect(*_):
     scope = ['https://spreadsheets.google.com/feeds',
@@ -40,33 +39,6 @@ def loadConfigData(idName):
     print ('Can not found ID Name')
     return None
 
-def updateConfigValue(idName, colName, value):
-    print('Loading config data from database....')
-    sheet = connect().open(sheetName).worksheet('Config')
-    configS = sheet.get_all_records()
-    header = sheet.row_values(1)
-    row = 1
-    col = header.index(colName)+1
-    for r in configS:
-        row += 1
-        if r['idName'] == idName and idName != 'idName':
-            #print (row)
-            sheet.update_cell(row,col,value)
-            print('online config has been updated ... {} {} is {}'.format(idName,colName,str(value)))
-
-def getConfigValue(idName, colName):
-    print('Loading config data from database.... get value {} {}'.format(idName,colName))
-    sheet = connect().open(sheetName).worksheet('Config')
-    configS = sheet.get_all_records()
-    header = sheet.row_values(1)
-    row = 1
-    col = header.index(colName)+1
-    for r in configS:
-        row += 1
-        if r['idName'] == idName and idName != 'idName':
-            return r[colName]
-    return None
-
 def getWorksheetColumnName(workSheet):
     sheet = connect().open(sheetName).worksheet(workSheet)
     header = sheet.row_values(1)
@@ -92,4 +64,6 @@ def getAllDataS(workSheet):
     return dataS
 
 if __name__ == '__main__':
+    import pprint
+    pprint.pprint(getAllDataS('Config'))
     pass
