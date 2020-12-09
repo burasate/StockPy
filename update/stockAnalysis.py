@@ -221,9 +221,9 @@ def plotIndicatorFromCSV(csvPath,preset,save=False):
 
     #signal point
     for i in buy_point:
-        plt.text(i[0],i[1] , '+', size=12, ha='center', va='center', color=((0.4, 0.8, 0)))
+        plt.text(i[0],i[1] , i[1], size=12, ha='center', va='bottom', color=((0.4, 0.8, 0)))
     for i in sell_point:
-        plt.text(i[0],i[1] , '+', size=12, ha='center', va='center', color=((0.8, 0.4, 0)))
+        plt.text(i[0],i[1] , i[1], size=12, ha='center', va='top', color=((0.8, 0.4, 0)))
 
     # Line
     plt.plot(df['Day'], clh, color=(0, 0.4, 0.8), linewidth=1)
@@ -265,7 +265,12 @@ def getImageBuySignalAll(*_):
 
 
 if __name__ == '__main__' :
-    getImageBuySignalAll()
+    #getImageBuySignalAll()
+    import update
+    update.updatePreset()
+    presetPath = dataPath + '/preset.json'
+    presetJson = json.load(open(presetPath))
+    plotIndicatorFromCSV(histPath + 'KCE' + '.csv', 'preset02', False)
 
 
 
