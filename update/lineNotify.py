@@ -85,9 +85,10 @@ def signalReportToUser(*_):
                     for i in range(3):
                         try:
                             sendNotifyImageMsg(token,imgPath+f,q_msg)
+                            break
                         except:
                             if i >= timeOut:
-                                continue
+                                break
                             else:
                                 pass
 

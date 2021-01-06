@@ -216,8 +216,8 @@ def plotIndicatorFromCSV(csvPath,preset,save=False):
              'Authorized Capital : {}\nPaid-up Capital : {}\n'.format(quoteJson[quote]["Authorized Capital"],
                                                                       quoteJson[quote]["Paid-up Capital"])
              , size=14, ha='left', va='top', color=((.6, .6, .6)))
-    plt.text(100, signalS['BreakOut L'], ' Loss', size=12, ha='left', va='center', color=((0.8, 0.4, 0)))
-    plt.text(100, signalS['BreakOut H'], ' Gain', size=12, ha='left', va='center', color=((0.4, 0.8, 0)))
+    plt.text(100, signalS['BreakOut L'], signalS['BreakOut L'], size=12, ha='left', va='center', color=((0.8, 0.4, 0)))
+    plt.text(100, signalS['BreakOut H'], signalS['BreakOut H'], size=12, ha='left', va='center', color=((0.4, 0.8, 0)))
 
     #signal point
     for i in buy_point:
@@ -266,11 +266,12 @@ def getImageBuySignalAll(*_):
 
 if __name__ == '__main__' :
     #getImageBuySignalAll()
-    import update
-    update.updatePreset()
+    #import update
+    #update.updatePreset()
     presetPath = dataPath + '/preset.json'
     presetJson = json.load(open(presetPath))
     plotIndicatorFromCSV(histPath + 'KCE' + '.csv', 'preset02', False)
+    pass
 
 
 
