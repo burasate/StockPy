@@ -36,17 +36,40 @@ def signalReportToUser(*_):
             token = configJson[user]['lineToken']
             preset = configJson[user]['preset']
             description = configJson[user]['description']
+
+            # Load Preset
+            ps_value = presetJson[preset]["value"]
+            ps_priceMin = presetJson[preset]["priceMin"]
+            ps_priceMax = presetJson[preset]["priceMax"]
+            ps_sma = presetJson[preset]["SMA"]
+            ps_breakout_high = presetJson[preset]["breakOutH"]
+            ps_breakout_low = presetJson[preset]["breakOutL"]
+
             print('sending to {} ({}) preset \"{}\"'.format(user,description,preset))
 
             #Send Summary
             signalS = stockAnalysis.getSignalFromPreset(preset)
 
-            text_buy = '△ \n{}\n'.format(' '.join(signalS['BUY']))
+            #Buy Most Active Filter
+            buyActive = []
+            buyInActive = []
+            for quote in signalS['BUY']:
+                csvPath = histPath + quote + '.csv'
+                dataS = stockAnalysis.getAnalysisSetFromCSV(csvPath, ps_value, ps_priceMin, ps_priceMax, ps_sma, ps_breakout_high,
+                                                    ps_breakout_low)
+                if dataS['HIGH VOL W CHG'] > 0:
+                    buyActive.append(quote)
+                else:
+                    buyInActive.append(quote)
+
+            #Message Text
+            text_buy_active = '△+ \n{}\n'.format(' '.join(buyActive))
+            text_buy = '△- \n{}\n'.format(' '.join(buyInActive))
             text_side = '◁ ▷ \n{}\n'.format(' '.join(signalS['SIDE']))
             text_sell = '▽ \n{}\n'.format(' '.join(signalS['SELL']))
 
             msg_signal = date + '\n' \
-                                '' + text_buy + text_side + text_sell
+                                '' + text_buy_active + text_buy + text_side + text_sell
             sendNotifyMassage(token,msg_signal)
             
             #Send Img
@@ -55,14 +78,6 @@ def signalReportToUser(*_):
                     quote = f.split('_')[-1][:-len('.png')]
                     print('sending {} to {} ({})'.format(quote, user, description))
                     csvPath = histPath+quote+'.csv'
-
-                    # Load Preset
-                    ps_value = presetJson[preset]["value"]
-                    ps_priceMin = presetJson[preset]["priceMin"]
-                    ps_priceMax = presetJson[preset]["priceMax"]
-                    ps_sma = presetJson[preset]["SMA"]
-                    ps_breakout_high = presetJson[preset]["breakOutH"]
-                    ps_breakout_low = presetJson[preset]["breakOutL"]
 
                     # Load Quote Data
                     dataS = stockAnalysis.getAnalysisSetFromCSV(csvPath, ps_value, ps_priceMin, ps_priceMax, ps_sma, ps_breakout_high,
@@ -95,5 +110,11 @@ def signalReportToUser(*_):
 if __name__=='__main__':
     #sendNotifyMassage('Fq2uIz8AnqmCS2J9eA6ttmVhY1dfDdPp7lzAlsrDc44','test')
     #sendNotifyImageMsg('Fq2uIz8AnqmCS2J9eA6ttmVhY1dfDdPp7lzAlsrDc44','C:/Users/DEX3D_I7/Pictures/UglyDolls2_1.mp4_snapshot_01.17.998.jpg',"asfdfas")
+
+    import update
+    update.updatePreset()
+    presetPath = dataPath + '/preset.json'
+    presetJson = json.load(open(presetPath))
+
     signalReportToUser()
     pass

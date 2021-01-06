@@ -266,8 +266,8 @@ def getImageBuySignalAll(*_):
 
 if __name__ == '__main__' :
     #getImageBuySignalAll()
-    #import update
-    #update.updatePreset()
+    import update
+    update.updatePreset()
     presetPath = dataPath + '/preset.json'
     presetJson = json.load(open(presetPath))
     plotIndicatorFromCSV(histPath + 'KCE' + '.csv', 'preset02', False)
