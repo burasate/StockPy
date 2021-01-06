@@ -35,7 +35,8 @@ def signalReportToUser(*_):
         if bool(configJson[user]['active']):
             token = configJson[user]['lineToken']
             preset = configJson[user]['preset']
-            print('sending to \"{}\" preset \"{}\"'.format(user,preset))
+            description = configJson[user]['description']
+            print('sending to {} ({}) preset \"{}\"'.format(user,description,preset))
 
             #Send Summary
             signalS = stockAnalysis.getSignalFromPreset(preset)
@@ -52,6 +53,7 @@ def signalReportToUser(*_):
             for f in ImgFiles:
                 if f.__contains__(preset):
                     quote = f.split('_')[-1][:-len('.png')]
+                    print('sending {} to {} ({})'.format(quote, user, description))
                     csvPath = histPath+quote+'.csv'
 
                     # Load Preset
@@ -78,10 +80,19 @@ def signalReportToUser(*_):
                             'Week Chg Vol {}m / Val {}m'.format(quote, price, chage, breakout_high, stop, trailling,
                                                                 volume_w_chg, value_w_chg)
                     #print (q_msg)
-                    sendNotifyImageMsg(token,imgPath+f,q_msg)
+                    #try send image with timeout checking
+                    timeOut = 3
+                    for i in range(3):
+                        try:
+                            sendNotifyImageMsg(token,imgPath+f,q_msg)
+                        except:
+                            if i >= timeOut:
+                                continue
+                            else:
+                                pass
 
 if __name__=='__main__':
     #sendNotifyMassage('Fq2uIz8AnqmCS2J9eA6ttmVhY1dfDdPp7lzAlsrDc44','test')
     #sendNotifyImageMsg('Fq2uIz8AnqmCS2J9eA6ttmVhY1dfDdPp7lzAlsrDc44','C:/Users/DEX3D_I7/Pictures/UglyDolls2_1.mp4_snapshot_01.17.998.jpg',"asfdfas")
-    #signalReportToUser()
+    signalReportToUser()
     pass
