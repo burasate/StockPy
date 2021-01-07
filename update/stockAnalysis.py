@@ -38,8 +38,8 @@ def getAnalysisSetFromCSV(csvPath,valueFilter=100000000,priceMin=5,priceMax=150,
     value = df['Volume'][0] * df['Close'][0]
     sma_s = round(df['Close'][0:SMA].mean(), 2)
     sma_l = round(df['Close'].mean(), 2)
-    breakout_high = df['High'][1:breakOutH].max()
-    breakout_low = df['Low'][1:breakOutL].min()
+    breakout_high = df['High'][0:breakOutH].max()
+    breakout_low = df['Low'][0:breakOutL].min()
     breakout_mid = round((breakout_high + breakout_low) / 2, 2)
     breakout_midLow = round((breakout_mid + (breakout_low * 2)) / 3, 2)
     breakout_midHigh = round((breakout_mid + (breakout_high * 2)) / 3, 2)
@@ -190,15 +190,21 @@ def plotIndicatorFromCSV(csvPath,preset,save=False):
     ax = plt.axes()
     ax.set_facecolor((1, 1, 1))
     fig.patch.set_facecolor((1, 1, 1))
-    plt.subplots_adjust(left=0.04, bottom=0.05, right=0.98, top=0.90, wspace=0.20, hspace=0.20)
+    plt.subplots_adjust(left=0.02, bottom=0.05, right=0.98, top=0.90, wspace=0.20, hspace=0.20)
     plt.xlabel('Day')
     plt.ylabel('Price')
+    plt.tick_params(axis='y', which='both', labelleft='off', labelright='on', direction='inout')
 
     # Text
     plt.title(quoteJson[quote]["Name"].upper() + '\n' +
               quoteJson[quote]["Market"] + ' - ' + quoteJson[quote]["Sector"],
               fontsize=20, color=(.4, .4, .4))
-    plt.text(100, min(df['Low']), quote + ' : ' + str(signalS['PRICE']), size=50, ha='right', va='bottom', color=(.7, .7, .7))
+    if signalS['CHG% D'] >= 0 and signalS['HIGH VAL W CHG'] >= 0:
+        plt.text(100, min(df['Low']), quote + ' : ' + str(signalS['PRICE']), size=60, ha='right', va='bottom',
+                 color=(0.4, 0.8, 0))
+    else:
+        plt.text(100, min(df['Low']), quote + ' : ' + str(signalS['PRICE']), size=60, ha='right', va='bottom',
+                 color=(.7, .7, .7))
     plt.text(100, min(df['Low']), 'by Burasate.U', size=12, ha='right', va='top', color=(.7, .7, .7))
     plt.text(min(df['Day'] - 3), max(df['High']),
              'Data From Yahoo Finance\n' + signalS['DATE'] + '\n\n' +
@@ -215,24 +221,32 @@ def plotIndicatorFromCSV(csvPath,preset,save=False):
                                                                  quoteJson[quote]["Par"]) +
              'Authorized Capital : {}\nPaid-up Capital : {}\n'.format(quoteJson[quote]["Authorized Capital"],
                                                                       quoteJson[quote]["Paid-up Capital"])
-             , size=14, ha='left', va='top', color=((.6, .6, .6)))
-    plt.text(100, signalS['BreakOut L'], signalS['BreakOut L'], size=12, ha='left', va='center', color=((0.8, 0.4, 0)))
-    plt.text(100, signalS['BreakOut H'], signalS['BreakOut H'], size=12, ha='left', va='center', color=((0.4, 0.8, 0)))
+             , size=15, ha='left', va='top', color=((.6, .6, .6)))
+    plt.text(100, signalS['BreakOut L'], '  '+str(signalS['BreakOut L']), size=15, ha='left', va='center', color=((0.8, 0.4, 0)))
+    plt.text(100, signalS['BreakOut H'], '  '+str(signalS['BreakOut H']), size=15, ha='left', va='center', color=((0.4, 0.8, 0)))
 
     #signal point
     for i in buy_point:
-        plt.text(i[0],i[1] , i[1], size=12, ha='center', va='bottom', color=((0.4, 0.8, 0)))
+        plt.text(i[0],i[1] , i[1], size=10, ha='center', va='bottom', color=((0.4, 0.8, 0)))
     for i in sell_point:
-        plt.text(i[0],i[1] , i[1], size=12, ha='center', va='top', color=((0.8, 0.4, 0)))
+        plt.text(i[0],i[1] , i[1], size=10, ha='center', va='top', color=((0.8, 0.4, 0)))
+
+    # Verticle Line
+    plt.plot([95, 95], [bkh_plt[4], bkl_plt[4]], color=(0.5, 0.5, 0.5), linewidth=.4, linestyle='--')
+    plt.plot([99, 99], [bkh_plt[1], bkl_plt[1]], color=(0.5, 0.5, 0.5), linewidth=.4, linestyle='--')
+    plt.plot([80, 80], [bkh_plt[20], bkl_plt[20]], color=(0.5, 0.5, 0.5), linewidth=.4, linestyle='--')
+    plt.plot([60, 60], [bkh_plt[40], bkl_plt[40]], color=(0.5, 0.5, 0.5), linewidth=.4, linestyle='--')
+    plt.plot([40, 40], [bkh_plt[60], bkl_plt[60]], color=(0.5, 0.5, 0.5), linewidth=.4, linestyle='--')
+    plt.plot([20, 20], [bkh_plt[80], bkl_plt[80]], color=(0.5, 0.5, 0.5), linewidth=.4, linestyle='--')
 
     # Line
     plt.plot(df['Day'], clh, color=(0, 0.4, 0.8), linewidth=1)
-    plt.plot(df['Day'], h_plt, color=(0.5, 0.5, 0.5), linewidth=.2, linestyle='--')
-    plt.plot(df['Day'], l_plt, color=(0.5, 0.5, 0.5), linewidth=.2, linestyle='--')
+    plt.plot(df['Day'], h_plt, color=(0.4, 0.8, 0), linewidth=.2, linestyle='-')
+    plt.plot(df['Day'], l_plt, color=(0.8, 0.4, 0), linewidth=.2, linestyle='-')
     plt.plot(df['Day'], clh_np, linewidth=1, color='grey', linestyle=':')
 
-    plt.plot(df['Day'], bkh_plt, linewidth=1, color=(0.4, 0.8, 0), linestyle='--')
-    plt.plot(df['Day'], bkl_plt, linewidth=1, color=(0.8, 0.4, 0), linestyle='--')
+    plt.plot(df['Day'], bkh_plt, linewidth=1, color=(0.4, 0.8, 0), linestyle='-')
+    plt.plot(df['Day'], bkl_plt, linewidth=1, color=(0.8, 0.4, 0), linestyle='-')
     plt.plot(df['Day'], bkm_plt, linewidth=1, color=(1, 0.8, 0), linestyle='--')
     plt.plot(df['Day'], bkmh_plt, linewidth=1, color=(0.4, 0.8, 0), linestyle=':')
     plt.plot(df['Day'], bkml_plt, linewidth=1, color=(0.8, 0.4, 0), linestyle=':')

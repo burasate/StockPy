@@ -1,7 +1,6 @@
 import time
 time.sleep(120)
 
-
 import update
 while True:
     try:
