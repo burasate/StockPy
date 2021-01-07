@@ -199,7 +199,7 @@ def plotIndicatorFromCSV(csvPath,preset,save=False):
     plt.title(quoteJson[quote]["Name"].upper() + '\n' +
               quoteJson[quote]["Market"] + ' - ' + quoteJson[quote]["Sector"],
               fontsize=20, color=(.4, .4, .4))
-    if signalS['CHG% D'] >= 0 and signalS['HIGH VAL W CHG'] >= 0:
+    if signalS['CHG% W'] >= 0 and signalS['HIGH VAL W CHG'] >= 0:
         plt.text(100, min(df['Low']), quote + ' : ' + str(signalS['PRICE']), size=60, ha='right', va='bottom',
                  color=(0.4, 0.8, 0))
     else:
