@@ -475,3 +475,6 @@ update/data/analysis_img/preset01_AEONTS.png
 update/__pycache__/update.cpython-37.pyc
 update/__pycache__/gSheet.cpython-37.pyc
 *.pyc
+*.csv
+update/data/load_stock_hist_log.txt
+update/data/sandbox.json

@@ -180,10 +180,10 @@ def plotIndicatorFromCSV(csvPath,preset,save=False):
         sma_plt.append(sma)
         sma_l_plt.append(sma_l)
 
-        if i !=0 and df['Close'][i] > bkmh_plt[-2] :
-            buy_point.append((df['Day'][i],df['Close'][i]))
-        if i !=0 and df['Close'][i] < bkml_plt[-2] :
-            sell_point.append((df['Day'][i],df['Close'][i]))
+        if i !=0 and df['High'][i] > bkmh_plt[-2] :
+            buy_point.append((df['Day'][i],df['High'][i]))
+        if i !=0 and df['Low'][i] < bkml_plt[-2] :
+            sell_point.append((df['Day'][i],df['Low'][i]))
 
     # Plot Figure
     fig = plt.figure(figsize=(21, 9), dpi=100)
@@ -224,12 +224,13 @@ def plotIndicatorFromCSV(csvPath,preset,save=False):
              , size=15, ha='left', va='top', color=((.6, .6, .6)))
     plt.text(100, signalS['BreakOut L'], '  '+str(signalS['BreakOut L']), size=15, ha='left', va='center', color=((0.8, 0.4, 0)))
     plt.text(100, signalS['BreakOut H'], '  '+str(signalS['BreakOut H']), size=15, ha='left', va='center', color=((0.4, 0.8, 0)))
+    plt.text(100, signalS['BreakOut M'], '  '+str(signalS['BreakOut M']), size=15, ha='left', va='center', color=((1, 0.8, 0)))
 
     #signal point
     for i in buy_point:
-        plt.text(i[0],i[1] , i[1], size=10, ha='center', va='bottom', color=((0.4, 0.8, 0)))
+        plt.text(i[0],i[1] , '+', size=5, ha='center', va='bottom', color=((0.4, 0.8, 0)))
     for i in sell_point:
-        plt.text(i[0],i[1] , i[1], size=10, ha='center', va='top', color=((0.8, 0.4, 0)))
+        plt.text(i[0],i[1] , '+', size=5, ha='center', va='top', color=((0.8, 0.4, 0)))
 
     # Verticle Line
     plt.plot([95, 95], [bkh_plt[4], bkl_plt[4]], color=(0.5, 0.5, 0.5), linewidth=.4, linestyle='--')
@@ -240,9 +241,9 @@ def plotIndicatorFromCSV(csvPath,preset,save=False):
     plt.plot([20, 20], [bkh_plt[80], bkl_plt[80]], color=(0.5, 0.5, 0.5), linewidth=.4, linestyle='--')
 
     # Line
-    plt.plot(df['Day'], clh, color=(0, 0.4, 0.8), linewidth=1)
-    plt.plot(df['Day'], h_plt, color=(0.4, 0.8, 0), linewidth=.2, linestyle='-')
-    plt.plot(df['Day'], l_plt, color=(0.8, 0.4, 0), linewidth=.2, linestyle='-')
+    plt.plot(df['Day'], clh, color=(0, 0.4, 0.8), linewidth=1,marker = '',markersize=1)
+    plt.plot(df['Day'], h_plt, color=(0.2, 0.2, 0.2), linewidth=.2, linestyle=':',marker = '',markersize=.5)
+    plt.plot(df['Day'], l_plt, color=(0.2, 0.2, 0.2), linewidth=.2, linestyle=':',marker = '',markersize=.5)
     plt.plot(df['Day'], clh_np, linewidth=1, color='grey', linestyle=':')
 
     plt.plot(df['Day'], bkh_plt, linewidth=1, color=(0.4, 0.8, 0), linestyle='-')
@@ -250,8 +251,8 @@ def plotIndicatorFromCSV(csvPath,preset,save=False):
     plt.plot(df['Day'], bkm_plt, linewidth=1, color=(1, 0.8, 0), linestyle='--')
     plt.plot(df['Day'], bkmh_plt, linewidth=1, color=(0.4, 0.8, 0), linestyle=':')
     plt.plot(df['Day'], bkml_plt, linewidth=1, color=(0.8, 0.4, 0), linestyle=':')
-    plt.plot(df['Day'], sma_plt, color=(0.2, 0.7, 1.0), linewidth=.5, linestyle='--')
-    plt.plot(df['Day'], sma_l_plt, color=(0.7, 0.2, 0.5), linewidth=.5, linestyle='--')
+    #plt.plot(df['Day'], sma_plt, color=(0.2, 0.7, 1.0), linewidth=.5, linestyle='--')
+    #plt.plot(df['Day'], sma_l_plt, color=(0.7, 0.2, 0.5), linewidth=.5, linestyle='--')
 
     # Finally
     if save:
@@ -280,11 +281,7 @@ def getImageBuySignalAll(*_):
 
 if __name__ == '__main__' :
     #getImageBuySignalAll()
-    import update
-    update.updatePreset()
-    presetPath = dataPath + '/preset.json'
-    presetJson = json.load(open(presetPath))
-    plotIndicatorFromCSV(histPath + 'KCE' + '.csv', 'preset02', False)
+    plotIndicatorFromCSV(histPath + 'IRPC' + '.csv', 'S3', False)
     pass
 
 
