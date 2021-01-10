@@ -227,7 +227,7 @@ def plotIndicatorFromCSV(csvPath,preset,save=False):
     plt.subplots_adjust(left=0.01, bottom=0.05, right=0.97, top=0.90, wspace=0.20, hspace=0.20)
 
     #Plot Setup
-    plotTrimMin = 60
+    plotTrimMin = 20
     plotTrimMax = 102
     axes[0].set_facecolor(pltColor['bg'])
     axes[0].set_xlim(plotTrimMin,plotTrimMax)
@@ -407,7 +407,7 @@ def getImageBuySignalAll(*_):
 
 if __name__ == '__main__' :
     #getImageBuySignalAll()
-    plotIndicatorFromCSV(histPath + 'SAWAD' + '.csv', 'S3', False)
+    plotIndicatorFromCSV(histPath + 'AI' + '.csv', 'S3', False)
     pass
 
 

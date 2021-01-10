@@ -58,4 +58,4 @@ def updatePreset(*_):
 if __name__ == '__main__':
     updateConfig()
     updatePreset()
-    #updateAllFile()
+    updateAllFile()
