@@ -478,3 +478,4 @@ update/__pycache__/gSheet.cpython-37.pyc
 *.csv
 update/data/load_stock_hist_log.txt
 update/data/sandbox.json
+update/data/analysis_img/S3_SAWAD.png

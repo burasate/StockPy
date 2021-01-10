@@ -219,6 +219,8 @@ def plotIndicatorFromCSV(csvPath,preset,save=False):
                              sharex=False, sharey=False,
                             gridspec_kw={'height_ratios': [3,1]})
     fig.patch.set_facecolor((.9, .9, .9))
+    plt.rcParams['figure.facecolor'] = (.9, .9, .9)
+    fig.patch.set_alpha(1)
     fig.suptitle(quoteJson[quote]["Name"].upper() + '\n' +
               quoteJson[quote]["Market"] + ' - ' + quoteJson[quote]["Sector"],
               fontsize=15, color=pltColor['text'])
@@ -382,7 +384,7 @@ def plotIndicatorFromCSV(csvPath,preset,save=False):
     if save:
         savePath = dataPath+'/analysis_img/' + '_'.join([preset,quote]) + '.png'
         print(savePath)
-        plt.savefig(savePath)
+        plt.savefig(savePath,facecolor=fig.get_facecolor())
     else:
         plt.show()
 
@@ -405,7 +407,7 @@ def getImageBuySignalAll(*_):
 
 if __name__ == '__main__' :
     #getImageBuySignalAll()
-    plotIndicatorFromCSV(histPath + 'SAWAD' + '.csv', 'S3', False)
+    plotIndicatorFromCSV(histPath + 'SAWAD' + '.csv', 'S3', True)
     pass
 
 
