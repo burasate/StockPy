@@ -301,7 +301,7 @@ def plotIndicatorFromCSV(csvPath,preset,save=False):
                  'Breakout High : {} Days\n'.format(ps_breakout_high)+
                  'Breakout Low : {} Days\n'.format(ps_breakout_low)+
                  'STO Fast : {} Days\n'.format(ps_sto_fast)+
-                 'STO Sow : {} Days\n'.format(ps_sto_slow)
+                 'STO Slow : {} Days\n'.format(ps_sto_slow)
              , size=10, ha='left', va='top', color=((.6, .6, .6)))
 
     """
