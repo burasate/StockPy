@@ -228,7 +228,7 @@ def plotIndicatorFromCSV(csvPath,preset,save=False):
 
     #Plot Setup
     plotTrimMin = 20
-    plotTrimMax = 102
+    plotTrimMax = 105
     axes[0].set_facecolor(pltColor['bg'])
     axes[0].set_xlim(plotTrimMin,plotTrimMax)
     axes[0].grid(True, 'both', 'both',color = (.87,.87,.87))
@@ -292,7 +292,7 @@ def plotIndicatorFromCSV(csvPath,preset,save=False):
              color=pltColor['text'])
     axes[0].text(100, signalS['BreakOut M'], '  ' + str(signalS['BreakOut M']), size=10, ha='left', va='center',
              color=pltColor['text'])
-    axes[0].text(plotTrimMin+1, signalS['BreakOut H'],
+    axes[0].text(plotTrimMin+1, df['High'].max(),
                  'Preset Name: {}\n'.format(preset)+
                  'Preset Description : {}\n'.format(ps_description)+
                  'Value greater than  : {}\n'.format(ps_value)+
