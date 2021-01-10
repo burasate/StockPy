@@ -92,8 +92,7 @@ def signalReportToUser(*_):
                     value_w_chg = round(price * volume_w_chg, 1)
 
                     q_msg = '▹ {} {}   \nMonth Chg {}% \nBreak Out High {}\nStoploss {}  Trailling {}%\n' \
-                            'Week Chg Vol {}m / Val {}m'.format(quote, price, chage, breakout_high, stop, trailling,
-                                                                volume_w_chg, value_w_chg)
+                            'Week Chg Val {} m'.format(quote, price, chage, breakout_high, stop, trailling,value_w_chg)
                     #print (q_msg)
                     #try send image with timeout checking
                     timeOut = 3
@@ -116,5 +115,5 @@ if __name__=='__main__':
     presetPath = dataPath + '/preset.json'
     presetJson = json.load(open(presetPath))
 
-    signalReportToUser()
+    #signalReportToUser()
     pass

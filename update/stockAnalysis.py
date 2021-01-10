@@ -52,6 +52,7 @@ def getAnalysisSetFromCSV(csvPath,valueFilter=100000000,priceMin=5,priceMax=150,
     value_high_week_change = volume_high_week_change * price
     board_lot = price * 100
 
+
     # Signal Condition
     condition_filter = (
             value > valueFilter and
@@ -134,12 +135,15 @@ def plotIndicatorFromCSV(csvPath,preset,save=False):
     quote = os.path.splitext(os.path.basename(csvPath))[0]
 
     #Load Preset
+    ps_description = presetJson[preset]["description"]
     ps_value = presetJson[preset]["value"]
     ps_priceMin = presetJson[preset]["priceMin"]
     ps_priceMax = presetJson[preset]["priceMax"]
     ps_sma = presetJson[preset]["SMA"]
     ps_breakout_high = presetJson[preset]["breakOutH"]
     ps_breakout_low = presetJson[preset]["breakOutL"]
+    ps_sto_fast = presetJson[preset]["stoFast"]
+    ps_sto_slow = presetJson[preset]["stoSlow"]
 
     # Load Signal
     signalS = getAnalysisSetFromCSV(csvPath,ps_value,ps_priceMin,ps_priceMax,ps_sma,ps_breakout_high,ps_breakout_low)
@@ -147,10 +151,22 @@ def plotIndicatorFromCSV(csvPath,preset,save=False):
     # Read Data Frame
     df = pd.read_csv(csvPath)
 
-    clh = (df['Close'] + df['High'] + df['Low']) / 3
+    #clh = (df['Close'] + df['High'] + df['Low']) / 3
+    clh = df['Close']
     h_plt = df['High']
     l_plt = df['Low']
     clh_np = np.linspace(df['Close'][0], df['Close'][df['Day'].count() - 1], df['Day'].count())
+
+    # slow stochastic
+    df_reverse = df.sort_index(ascending=False)
+    low_min = df_reverse['Low'].rolling(ps_sto_fast).min()
+    high_max = df_reverse['High'].rolling(ps_sto_fast).max()
+    k_fast = 100*(df_reverse['Close'] - low_min) / (high_max - low_min)
+    k_slow = k_fast.rolling(ps_sto_slow).mean()
+    d_slow = k_slow.rolling(ps_sto_slow).mean()
+    df['%K'] = k_slow.sort_index(ascending=True)
+    df['%D'] = d_slow.sort_index(ascending=True)
+    #print(df)
 
     # create indicator
     bkh_plt = []
@@ -162,6 +178,10 @@ def plotIndicatorFromCSV(csvPath,preset,save=False):
     sma_l_plt = []
     buy_point = []
     sell_point = []
+    k_fast_plt = []
+    d_fast_plt = []
+    k_slow_plt = []
+    d_slow_plt = []
     for i in range(df['Day'].count()):
         #print(df['Day'][i])
         breakout_h = df['High'][i:i+ps_breakout_high].max()
@@ -171,6 +191,7 @@ def plotIndicatorFromCSV(csvPath,preset,save=False):
         breakout_ml = (breakout_m+(breakout_l*2))/3
         sma = df['Close'][i:i+ps_sma].mean()
         sma_l = df['Close'][i:i+df['Day'][i]].mean()
+        df['Close'][i:i + ps_sma].mean()
 
         bkh_plt.append(breakout_h)
         bkl_plt.append(breakout_l)
@@ -185,6 +206,103 @@ def plotIndicatorFromCSV(csvPath,preset,save=False):
         if i !=0 and df['Low'][i] < bkml_plt[-2] :
             sell_point.append((df['Day'][i],df['Low'][i]))
 
+    # Plot Figure
+    pltColor = {
+        'bg' : (.9, .9, .9),
+        'text' : (.4, .4, .4),
+        'red' : (0.8, 0.4, 0),
+        'green' : (0.4, 0.8, 0),
+        'blue' : (0, 0.7, 0.9),
+        'yellow' : (1, 0.8, 0)
+    }
+    fig, axes = plt.subplots(nrows=2, ncols=1, figsize=(12, 9), dpi=100,
+                             sharex=False, sharey=False,
+                            gridspec_kw={'height_ratios': [3,1]})
+    fig.patch.set_facecolor((.9, .9, .9))
+    fig.suptitle(quoteJson[quote]["Name"].upper() + '\n' +
+              quoteJson[quote]["Market"] + ' - ' + quoteJson[quote]["Sector"],
+              fontsize=15, color=pltColor['text'])
+    plt.subplots_adjust(left=0.01, bottom=0.05, right=0.97, top=0.90, wspace=0.20, hspace=0.20)
+
+    #Plot Setup
+    plotTrimMin = 60
+    plotTrimMax = 102
+    axes[0].set_facecolor(pltColor['bg'])
+    axes[0].set_xlim(plotTrimMin,plotTrimMax)
+    axes[0].grid(True, 'both', 'both',color = (.87,.87,.87))
+    axes[0].minorticks_on()
+    axes[0].set_title('Price',color=pltColor['text'])
+    axes[0].yaxis.tick_right()
+    axes[1].grid(True, 'both', 'both', color=(.87, .87, .87))
+    axes[1].minorticks_on()
+    axes[1].set_facecolor(pltColor['bg'])
+    axes[1].set_xlim(plotTrimMin, plotTrimMax)
+    axes[1].set_ylim(0, 100)
+    axes[1].set_title('Slow Stochastic',color=pltColor['text'])
+    axes[1].yaxis.tick_right()
+
+    # Line Plot
+    axes[0].plot(df['Day'], bkh_plt, linewidth=.7, color=pltColor['green'], linestyle='--')
+    axes[0].plot(df['Day'], bkl_plt, linewidth=.7, color=pltColor['red'], linestyle='--')
+    axes[0].plot(df['Day'], bkm_plt, linewidth=.7, color=(0.7, 0.7, 0.7), linestyle='--')
+    axes[0].plot(df['Day'], bkmh_plt, linewidth=.7, color=pltColor['green'], linestyle='--')
+    axes[0].plot(df['Day'], bkml_plt, linewidth=.7, color=pltColor['red'], linestyle='--')
+
+    axes[0].plot(df['Day'], clh, color=(.5,.5,.5), linewidth=1, marker='', markersize=1)
+    axes[0].plot(df['Day'][0], clh[0], color=(.5,.5,.5), linewidth=1, marker='o', markersize=7)
+    axes[0].plot(df['Day'], h_plt, color=(0.25, 0.25, 0.25), linewidth=.2, linestyle=':', marker='', markersize=.5)
+    axes[0].plot(df['Day'], l_plt, color=(0.25, 0.25, 0.25), linewidth=.2, linestyle=':', marker='', markersize=.5)
+    axes[0].plot(df['Day'], clh_np, linewidth=.5, color=(0.25, 0.25, 0.25), linestyle=':')
+
+    axes[1].plot(df['Day'], df['%K'], linewidth=1, color=(.5, .5, .5), linestyle='-')
+    axes[1].plot(df['Day'][0], df['%K'][0], color=(.5, .5, .5), linewidth=1, marker='o', markersize=7)
+    axes[1].plot(df['Day'], df['%D'], linewidth=.5, color=(.5,.5,.5), linestyle=':')
+
+    axes[1].plot([0,120], [80,80], linewidth=.7, color=pltColor['green'], linestyle='--')
+    axes[1].plot([0,120], [20,20], linewidth=.7, color=pltColor['red'], linestyle='--')
+
+    # Verticle Line
+    axes[0].plot([95, 95], [bkh_plt[4], bkl_plt[4]], color=(0.5, 0.5, 0.5), linewidth=.2, linestyle='--')
+    axes[0].plot([99, 99], [bkh_plt[1], bkl_plt[1]], color=(0.5, 0.5, 0.5), linewidth=.2, linestyle='--')
+    axes[0].plot([80, 80], [bkh_plt[20], bkl_plt[20]], color=(0.5, 0.5, 0.5), linewidth=.2, linestyle='--')
+    axes[0].plot([60, 60], [bkh_plt[40], bkl_plt[40]], color=(0.5, 0.5, 0.5), linewidth=.2, linestyle='--')
+    axes[0].plot([40, 40], [bkh_plt[60], bkl_plt[60]], color=(0.5, 0.5, 0.5), linewidth=.2, linestyle='--')
+    axes[0].plot([20, 20], [bkh_plt[80], bkl_plt[80]], color=(0.5, 0.5, 0.5), linewidth=.2, linestyle='--')
+
+    # signal point
+    for i in buy_point:
+        axes[0].text(i[0], i[1], '*', size=7, ha='center', va='bottom', color=((0.4, 0.8, 0)))
+    for i in sell_point:
+        axes[0].text(i[0], i[1], '*', size=7, ha='center', va='top', color=((0.8, 0.4, 0)))
+
+    #Text
+    if signalS['CHG% W'] >= 0 and signalS['HIGH VAL W CHG'] >= 0 \
+            and df['%K'][0] > df['%D'][0] and df['%K'][0] < 80:
+        axes[0].text(100, min(df['Low']), quote + ' : ' + str(signalS['PRICE']), size=40, ha='right', va='bottom',
+                 color=pltColor['green'],alpha = 0.5)
+    else:
+        axes[0].text(100, min(df['Low']), quote + ' : ' + str(signalS['PRICE']), size=40, ha='right', va='bottom',
+                 color=(.5,.5,.5),alpha = 0.5)
+    axes[0].text(100, min(df['Low']), 'by Burasate.U', size=12, ha='right', va='top', color=(.5,.5,.5))
+    axes[0].text(100, signalS['BreakOut L'], '  ' + str(signalS['BreakOut L']), size=10, ha='left', va='center',
+             color=pltColor['text'])
+    axes[0].text(100, signalS['BreakOut H'], '  ' + str(signalS['BreakOut H']), size=10, ha='left', va='center',
+             color=pltColor['text'])
+    axes[0].text(100, signalS['BreakOut M'], '  ' + str(signalS['BreakOut M']), size=10, ha='left', va='center',
+             color=pltColor['text'])
+    axes[0].text(plotTrimMin+1, signalS['BreakOut H'],
+                 'Preset Name: {}\n'.format(preset)+
+                 'Preset Description : {}\n'.format(ps_description)+
+                 'Value greater than  : {}\n'.format(ps_value)+
+                 'Price : {} - {}\n'.format(ps_priceMin,ps_priceMax)+
+                 'SMA : {} Days\n'.format(ps_sma)+
+                 'Breakout High : {} Days\n'.format(ps_breakout_high)+
+                 'Breakout Low : {} Days\n'.format(ps_breakout_low)+
+                 'STO Fast : {} Days\n'.format(ps_sto_fast)+
+                 'STO Sow : {} Days\n'.format(ps_sto_slow)
+             , size=10, ha='left', va='top', color=((.6, .6, .6)))
+
+    """
     # Plot Figure
     fig = plt.figure(figsize=(21, 9), dpi=100)
     ax = plt.axes()
@@ -246,6 +364,11 @@ def plotIndicatorFromCSV(csvPath,preset,save=False):
     plt.plot(df['Day'], l_plt, color=(0.2, 0.2, 0.2), linewidth=.2, linestyle=':',marker = '',markersize=.5)
     plt.plot(df['Day'], clh_np, linewidth=1, color='grey', linestyle=':')
 
+    #plt.plot(df['Day'], k_fast_plt, linewidth=1, color='grey', linestyle=':')
+    plt.plot(df['Day'], df['%D'], linewidth=1, color='grey', linestyle=':')
+    plt.plot(df['Day'], df['%K'], linewidth=1, color='grey', linestyle=':')
+    #plt.plot(df['Day'], df['D_Slow'], linewidth=1, color='grey', linestyle=':')
+
     plt.plot(df['Day'], bkh_plt, linewidth=1, color=(0.4, 0.8, 0), linestyle='-')
     plt.plot(df['Day'], bkl_plt, linewidth=1, color=(0.8, 0.4, 0), linestyle='-')
     plt.plot(df['Day'], bkm_plt, linewidth=1, color=(1, 0.8, 0), linestyle='--')
@@ -254,6 +377,7 @@ def plotIndicatorFromCSV(csvPath,preset,save=False):
     #plt.plot(df['Day'], sma_plt, color=(0.2, 0.7, 1.0), linewidth=.5, linestyle='--')
     #plt.plot(df['Day'], sma_l_plt, color=(0.7, 0.2, 0.5), linewidth=.5, linestyle='--')
 
+    """
     # Finally
     if save:
         savePath = dataPath+'/analysis_img/' + '_'.join([preset,quote]) + '.png'
@@ -281,7 +405,7 @@ def getImageBuySignalAll(*_):
 
 if __name__ == '__main__' :
     #getImageBuySignalAll()
-    plotIndicatorFromCSV(histPath + 'IRPC' + '.csv', 'S3', False)
+    plotIndicatorFromCSV(histPath + 'SAWAD' + '.csv', 'S3', False)
     pass
 
 
