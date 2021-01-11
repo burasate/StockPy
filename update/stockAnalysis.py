@@ -281,10 +281,14 @@ def plotIndicatorFromCSV(csvPath,preset,save=False):
     if signalS['CHG% W'] >= 0 and signalS['HIGH VAL W CHG'] >= 0 \
             and df['%K'][0] > df['%D'][0] and df['%K'][0] < 80:
         axes[0].text(100, min(df['Low']), quote + ' : ' + str(signalS['PRICE']), size=40, ha='right', va='bottom',
-                 color=pltColor['green'],alpha = 0.5)
+                 color=pltColor['green'],alpha = .5)
+    elif signalS['CHG% W'] >= 0 and signalS['HIGH VAL W CHG'] >= 0 \
+            and df['%K'][0] > df['%D'][0] and df['%K'][0] > 80:
+        axes[0].text(100, min(df['Low']), quote + ' : ' + str(signalS['PRICE']), size=40, ha='right', va='bottom',
+                     color=pltColor['blue'], alpha=.5)
     else:
         axes[0].text(100, min(df['Low']), quote + ' : ' + str(signalS['PRICE']), size=40, ha='right', va='bottom',
-                 color=(.5,.5,.5),alpha = 0.5)
+                 color=(.5,.5,.5),alpha = .5)
     axes[0].text(100, min(df['Low']), 'by Burasate.U', size=12, ha='right', va='top', color=(.5,.5,.5))
     axes[0].text(100, signalS['BreakOut L'], '  ' + str(signalS['BreakOut L']), size=10, ha='left', va='center',
              color=pltColor['text'])
@@ -301,7 +305,7 @@ def plotIndicatorFromCSV(csvPath,preset,save=False):
                  'Breakout High : {} Days\n'.format(ps_breakout_high)+
                  'Breakout Low : {} Days\n'.format(ps_breakout_low)+
                  'STO Fast : {} Days\n'.format(ps_sto_fast)+
-                 'STO Slow : {} Days\n'.format(ps_sto_slow)
+                 'STO Slow : {}\n'.format(ps_sto_slow)
              , size=10, ha='left', va='top', color=((.6, .6, .6)))
 
     """
