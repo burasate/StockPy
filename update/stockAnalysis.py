@@ -277,7 +277,7 @@ def plotIndicatorFromCSV(csvPath,preset,save=False):
     for i in sell_point:
         axes[0].text(i[0], i[1], '*', size=7, ha='center', va='top', color=((0.8, 0.4, 0)))
 
-    #Text
+    # Text Color By signal
     if signalS['CHG% W'] >= 0 and signalS['HIGH VAL W CHG'] >= 0 \
             and df['%K'][0] > df['%D'][0] and df['%K'][0] < 80:
         axes[0].text(100, min(df['Low']), quote + ' : ' + str(signalS['PRICE']), size=40, ha='right', va='bottom',
@@ -289,6 +289,8 @@ def plotIndicatorFromCSV(csvPath,preset,save=False):
     else:
         axes[0].text(100, min(df['Low']), quote + ' : ' + str(signalS['PRICE']), size=40, ha='right', va='bottom',
                  color=(.5,.5,.5),alpha = .5)
+
+    # Text
     axes[0].text(100, min(df['Low']), 'by Burasate.U', size=12, ha='right', va='top', color=(.5,.5,.5))
     axes[0].text(100, signalS['BreakOut L'], '  ' + str(signalS['BreakOut L']), size=10, ha='left', va='center',
              color=pltColor['text'])
