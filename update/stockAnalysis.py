@@ -168,6 +168,13 @@ def plotIndicatorFromCSV(csvPath,preset,save=False):
     df['%D'] = d_slow.sort_index(ascending=True)
     #print(df)
 
+    # volume
+    volume_sma_s = df_reverse['Volume'].rolling(2).mean()
+    volume_sma_l = volume_sma_s.rolling(10).mean()
+    df['Volume_SMA_S'] = volume_sma_s.sort_index(ascending=True)
+    df['Volume_SMA_L'] = volume_sma_l.sort_index(ascending=True)
+    df['Volume_SMA_Diff'] = df['Volume_SMA_S']-df['Volume_SMA_L']
+
     # create indicator
     bkh_plt = []
     bkl_plt = []
@@ -215,9 +222,9 @@ def plotIndicatorFromCSV(csvPath,preset,save=False):
         'blue' : (0, 0.7, 0.9),
         'yellow' : (1, 0.8, 0)
     }
-    fig, axes = plt.subplots(nrows=2, ncols=1, figsize=(12, 9), dpi=100,
+    fig, axes = plt.subplots(nrows=3, ncols=1, figsize=(12, 9), dpi=100,
                              sharex=False, sharey=False,
-                            gridspec_kw={'height_ratios': [3,1]})
+                            gridspec_kw={'height_ratios': [1.5,1,0.5]})
     fig.patch.set_facecolor((.9, .9, .9))
     plt.rcParams['figure.facecolor'] = (.9, .9, .9)
     fig.patch.set_alpha(1)
@@ -242,6 +249,12 @@ def plotIndicatorFromCSV(csvPath,preset,save=False):
     axes[1].set_ylim(0, 100)
     axes[1].set_title('Slow Stochastic',color=pltColor['text'])
     axes[1].yaxis.tick_right()
+    axes[2].grid(True, 'both', 'both', color=(.87, .87, .87))
+    axes[2].minorticks_on()
+    axes[2].set_facecolor(pltColor['bg'])
+    axes[2].set_xlim(plotTrimMin, plotTrimMax)
+    axes[2].set_title('Volume', color=pltColor['text'])
+    axes[2].yaxis.tick_right()
 
     # Line Plot
     axes[0].plot(df['Day'], bkh_plt, linewidth=.7, color=pltColor['green'], linestyle='--')
@@ -262,6 +275,11 @@ def plotIndicatorFromCSV(csvPath,preset,save=False):
 
     axes[1].plot([0,120], [80,80], linewidth=.7, color=pltColor['green'], linestyle='--')
     axes[1].plot([0,120], [20,20], linewidth=.7, color=pltColor['red'], linestyle='--')
+
+    axes[2].fill_between(df['Day'], df['Volume'], linewidth=.5, color=(.5, .5, .5), linestyle=':',alpha=0.2)
+    axes[2].plot(df['Day'], df['Volume_SMA_S'], linewidth=1, color=(.5, .5, .5), linestyle='-')
+    axes[2].plot(df['Day'], df['Volume_SMA_L'], linewidth=.5, color=(.5, .5, .5), linestyle='-')
+    axes[2].plot(df['Day'][0], df['Volume_SMA_S'][0], color=(.5, .5, .5), linewidth=1, marker='o', markersize=7)
 
     # Verticle Line
     axes[0].plot([95, 95], [bkh_plt[4], bkl_plt[4]], color=(0.5, 0.5, 0.5), linewidth=.2, linestyle='--')
@@ -413,7 +431,7 @@ def getImageBuySignalAll(*_):
 
 if __name__ == '__main__' :
     #getImageBuySignalAll()
-    plotIndicatorFromCSV(histPath + 'AI' + '.csv', 'S3', False)
+    plotIndicatorFromCSV(histPath + 'STARK' + '.csv', 'S3', False)
     pass
 
 
