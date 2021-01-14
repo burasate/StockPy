@@ -431,7 +431,7 @@ def getImageBuySignalAll(*_):
 
 if __name__ == '__main__' :
     #getImageBuySignalAll()
-    plotIndicatorFromCSV(histPath + 'STARK' + '.csv', 'S3', False)
+    plotIndicatorFromCSV(histPath + 'BGRIM' + '.csv', 'S3', False)
     pass
 
 
