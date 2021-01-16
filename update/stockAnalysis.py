@@ -18,6 +18,7 @@ quoteJson = json.load(open(quotePath))
 histFileList = os.listdir(histPath)
 analysisHistPath = dataPath + '/analysis_hist'
 
+"""
 def getAnalysisSetFromCSV(csvPath,valueFilter=100000000,priceMin=5,priceMax=150,SMA=10,breakOutH=55,breakOutL=20):
     quote = os.path.splitext(os.path.basename(csvPath))[0]
 
@@ -130,6 +131,7 @@ def getSignalFromPreset(presetName):
                 side_signal_list.append(analysisData['QUOTE'])
     dataS = {'BUY':buy_signal_list,'SELL':sell_signal_list,'SIDE':side_signal_list}
     return dataS
+"""
 
 def getAnalysis(csvPath,preset,saveImage=False,showImage=False):
     # Plot Indicator
@@ -384,23 +386,24 @@ def getSignalAllPreset(*_):
                 df['Preset'] = ps
                 df['Quote'] = quote
 
-                # Condition
+                # Condition Setting
                 filter_condition = (
-                    df['Value_M'][0] >= presetJson[ps]["value"]/1000000 and
-                    df['Close'][0] > presetJson[ps]["priceMin"] and
-                    df['Close'][0] < presetJson[ps]["priceMax"]
+                        df['Value_M'][0] >= presetJson[ps]["value"] / 1000000 and
+                        df['Close'][0] > presetJson[ps]["priceMin"] and
+                        df['Close'][0] < presetJson[ps]["priceMax"]
                 )
                 entry_condition = (
-                    df['SMA_S'][0] > df['SMA_L'][0] and
-                    df['%K'][0] > df['%D'][0] and
-                    df['%K'][0] < 80 and
-                    df['Volume_SMA_S'][0] > df['Volume_SMA_L'][0] and
-                    df['GL_Ratio'][0] > df['GL_Ratio_Avg'][0]
+                        df['SMA_S'][0] > df['SMA_L'][0] and
+                        df['%K'][0] > df['%D'][0] and
+                        df['%K'][0] < 80 and
+                        df['Volume_SMA_S'][0] > df['Volume_SMA_L'][0] and
+                        df['GL_Ratio'][0] > df['GL_Ratio_Avg'][0]
                 )
                 exit_condition = (
-                    df['SMA_S'][0] < df['SMA_L'][0] and
-                    df['GL_Ratio'][0] < df['GL_Ratio_Avg'][0]
+                        df['SMA_S'][0] < df['SMA_L'][0] and
+                        df['GL_Ratio'][0] < df['GL_Ratio_Avg'][0]
                 )
+
                 if filter_condition and entry_condition:
                     print('Preset : {} | Entry : {}'.format(ps,file))
                     df['Signal'] = 'Entry'
@@ -411,8 +414,6 @@ def getSignalAllPreset(*_):
                     df['Signal'] = 'Exit'
                     signal_df = signal_df.append(df.iloc[0])
                 elif filter_condition:
-                    #print('Preset : {} | Unknow : {}'.format(ps, file))
-                    #df['Signal'] = 'Unknow'
                     signal_df = signal_df.append(df.iloc[0])
             except:
                 pass
@@ -420,18 +421,134 @@ def getSignalAllPreset(*_):
     signal_df = signal_df.sort_values(['Signal','Preset','Value_M','GL_Ratio','ATR','Max_Drawdown%'], ascending=[True,True,False,False,True,True])
     signal_df.to_csv(dataPath+os.sep+'signal.csv',index=False)
 
-def backTesting(quote):
+def backTesting(quote,preset):
     #import csv from yahoofinance
     filePath = dataPath+'/backtesting_hist/'+quote+'.BK.csv'
+    tmpFilePath = dataPath+'/backtesting_hist/'+quote+'.tmp'
     df_hist = pd.read_csv(filePath)
+    df_bt = pd.DataFrame()
 
-    price = []
-    for i in range(99,df_hist['Date'].count()):
-        print(i)
-        df_sim = df_hist.iloc[i-100:i]
-        df_sim = df_sim.sort_index(ascending=False)
-        #print(df_sim['Adj Close'].iloc[0])
-        print(df_sim['Close'])
+    for i in range(df_hist['Date'].count()):
+        df_select = df_hist.iloc[i-100:i].reset_index(drop=True)
+        row_count = df_select['Close'].count()
+        if row_count >= 100:
+            df_select['Day'] = np.linspace(1,100,100).tolist()
+            df_reverse = df_select.sort_index(ascending=False).reset_index(drop=True)
+            print (df_reverse['Date'][0])
+
+            #create tmp file
+            df_reverse.to_csv(tmpFilePath,index=False)
+            #print( df_reverse  )
+            df = getAnalysis(tmpFilePath, preset, saveImage=False, showImage=False)
+            df['Preset'] = preset
+            df['Quote'] = quote
+
+            # Duplicate From Signal
+            # Condition Setting
+            filter_condition = (
+                    df['Value_M'][0] >= presetJson[preset]["value"] / 1000000 and
+                    df['Close'][0] > presetJson[preset]["priceMin"] and
+                    df['Close'][0] < presetJson[preset]["priceMax"]
+            )
+            entry_condition = (
+                    df['SMA_S'][0] > df['SMA_L'][0] and
+                    df['%K'][0] > df['%D'][0] and
+                    df['%K'][0] < 80 and
+                    df['Volume_SMA_S'][0] > df['Volume_SMA_L'][0] and
+                    df['GL_Ratio'][0] > df['GL_Ratio_Avg'][0]
+            )
+            exit_condition = (
+                    df['SMA_S'][0] < df['SMA_L'][0] and
+                    df['GL_Ratio'][0] < df['GL_Ratio_Avg'][0]
+            )
+            if filter_condition and entry_condition:
+                df['Signal'] = 'Entry'
+                df_bt = df_bt.append(df.iloc[0])
+            elif filter_condition and exit_condition:
+                df['Signal'] = 'Exit'
+                df_bt = df_bt.append(df.iloc[0])
+            elif filter_condition:
+                df_bt = df_bt.append(df.iloc[0])
+
+    #Reset Index
+    df_bt.reset_index(drop=True)
+
+    #df_bt = pd.read_csv(dataPath + os.sep + 'test.csv')
+    #Buy & Hold
+    new_signal = []
+    new_day = []
+    day = 0
+    buy_hold = []
+    buy_hold_chg = 0
+    hold = []
+    hold_chg = 0 - df_bt.iloc[0]['Chang_D%']
+    signal = np.nan
+    for i in range(df_bt['Date'].count()):
+        day = day + 1
+        new_day.append(day)
+        hold_chg = hold_chg + df_bt.iloc[i]['Chang_D%']
+        hold.append(hold_chg)
+        if df_bt.iloc[i]['Signal'] == 'Entry':
+            signal = 'Entry'
+        elif df_bt.iloc[i]['Signal'] == 'Exit':
+            signal = 'Exit'
+
+        new_signal.append(signal)
+        if new_signal[-1] == 'Entry':
+            buy_hold_chg = buy_hold_chg + df_bt.iloc[i]['Chang_D%']
+        buy_hold.append(buy_hold_chg)
+
+    df_bt['Signal'] = new_signal
+    #print(new_signal)
+    #print (df_bt['Signal'].tolist())
+    df_bt['Day'] = new_day
+    df_bt['Stg_Hold'] = hold
+    df_bt['Stg_BuyHold'] = buy_hold
+    df_bt['Stg_BuyHold'] = df_bt['Stg_BuyHold'].round(2)
+    df_bt['Stg_Hold'] = df_bt['Stg_Hold'].round(2)
+
+    # Plot Figure
+    pltColor = {
+        'bg': (.9, .9, .9),
+        'text': (.4, .4, .4),
+        'red': (0.8, 0.4, 0),
+        'green': (0.4, 0.8, 0),
+        'blue': (0, 0.7, 0.9),
+        'yellow': (1, 0.8, 0)
+    }
+    fig, axes = plt.subplots(nrows=2, ncols=1, figsize=(12, 9), dpi=100,
+                             sharex=True, sharey=False,
+                             gridspec_kw={'height_ratios': [1,1]})
+    fig.patch.set_facecolor((.9, .9, .9))
+    plt.rcParams['figure.facecolor'] = (.9, .9, .9)
+    fig.patch.set_alpha(1)
+    fig.suptitle('{}\nPreset \"{}\" Performance'.format(quote,preset),
+                 fontsize=15, color=pltColor['text'])
+    plt.subplots_adjust(left=0.01, bottom=0.05, right=0.97, top=0.90, wspace=0.20, hspace=0.00)
+
+    # Plot Setup
+    axes[0].set_facecolor(pltColor['bg'])
+    axes[0].grid(True, 'both', 'both', color=(.87, .87, .87))
+    axes[0].minorticks_on()
+    axes[0].set_title('Price', color=pltColor['text'], pad=2, size=10, y=0)
+    axes[0].yaxis.tick_right()
+    axes[1].set_facecolor(pltColor['bg'])
+    axes[1].grid(True, 'both', 'both', color=(.87, .87, .87))
+    axes[1].minorticks_on()
+    axes[1].set_title('Performance', color=pltColor['text'], pad=2, size=10, y=0)
+    axes[1].yaxis.tick_right()
+
+    axes[0].plot(df_bt['Day'], df_bt['Close'], linewidth=1, color=(.5, .5, .5), linestyle='-')
+
+    axes[1].plot(df_bt['Day'], df_bt['Stg_Hold'], linewidth=.7, color=(.5, .5, .5), linestyle='-')
+    axes[1].plot(df_bt['Day'], df_bt['Stg_BuyHold'], linewidth=1, color=(.5, .5, .5), linestyle='-')
+
+    imgName = '_'.join([preset, quote]) + '.png'
+    savePath = dataPath + '/backtesting_hist/' + imgName
+    print(imgName)
+    plt.savefig(savePath, facecolor=fig.get_facecolor())
+    #plt.show()
+    os.remove(tmpFilePath)
 
 def getImageBuySignalAll(*_):
     #Clear Directory
@@ -450,8 +567,12 @@ def getImageBuySignalAll(*_):
 
 if __name__ == '__main__' :
     #getAnalysis(histPath + 'TQM' + '.csv', 'S2',saveImage=False,showImage=True)
-    getSignalAllPreset()
-    #backTesting('KBANK')
+    #getSignalAllPreset()
+    for ps in presetJson:
+        backTesting('GULF',ps)
+        backTesting('CPALL',ps)
+        backTesting('IVL',ps)
+        backTesting('KBANK',ps)
     pass
 
 
