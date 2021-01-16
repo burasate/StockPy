@@ -16,6 +16,7 @@ presetJson = json.load(open(presetPath))
 quotePath = dataPath + '/quote.json'
 quoteJson = json.load(open(quotePath))
 histFileList = os.listdir(histPath)
+analysisHistPath = dataPath + '/analysis_hist'
 
 def getAnalysisSetFromCSV(csvPath,valueFilter=100000000,priceMin=5,priceMax=150,SMA=10,breakOutH=55,breakOutL=20):
     quote = os.path.splitext(os.path.basename(csvPath))[0]
@@ -130,7 +131,7 @@ def getSignalFromPreset(presetName):
     dataS = {'BUY':buy_signal_list,'SELL':sell_signal_list,'SIDE':side_signal_list}
     return dataS
 
-def plotIndicatorFromCSV(csvPath,preset,save=False):
+def getAnalysis(csvPath,preset,saveImage=False,showImage=False):
     # Plot Indicator
     quote = os.path.splitext(os.path.basename(csvPath))[0]
 
@@ -139,33 +140,47 @@ def plotIndicatorFromCSV(csvPath,preset,save=False):
     ps_value = presetJson[preset]["value"]
     ps_priceMin = presetJson[preset]["priceMin"]
     ps_priceMax = presetJson[preset]["priceMax"]
-    ps_sma = presetJson[preset]["SMA"]
+    ps_sma_s = presetJson[preset]["smaS"]
+    ps_sma_l = presetJson[preset]["smaL"]
     ps_breakout_high = presetJson[preset]["breakOutH"]
     ps_breakout_low = presetJson[preset]["breakOutL"]
     ps_sto_fast = presetJson[preset]["stoFast"]
     ps_sto_slow = presetJson[preset]["stoSlow"]
 
-    # Load Signal
-    signalS = getAnalysisSetFromCSV(csvPath,ps_value,ps_priceMin,ps_priceMax,ps_sma,ps_breakout_high,ps_breakout_low)
-
     # Read Data Frame
     df = pd.read_csv(csvPath)
 
-    #clh = (df['Close'] + df['High'] + df['Low']) / 3
     clh = df['Close']
     h_plt = df['High']
     l_plt = df['Low']
     clh_np = np.linspace(df['Close'][0], df['Close'][df['Day'].count() - 1], df['Day'].count())
 
-    # slow stochastic
+    #analysis
     df_reverse = df.sort_index(ascending=False)
+    flag = ''
+    date = str(dt.date.today())
+    df['TrueRange'] = df['High'] - df['Low'] #true range
+    avg_true_range = round(df['TrueRange'].mean(), 2)
+    df['ATR'] = avg_true_range.round(2)
+    df['Value_M'] = ((df['Volume']/1000000)*df['Close']).round(2)
+    day_n = 1
+    week_n = 5
+    month_n = 20
+    change_day = df_reverse['Close'].diff(day_n).sort_index(ascending=False)
+    change_week = df_reverse['Close'].diff(week_n).sort_index(ascending=False)
+    change_month = df_reverse['Close'].diff(month_n).sort_index(ascending=False)
+    df['Chang_D%'] = ((change_day/df['Close'][day_n])*100).round(2)
+    df['Chang_W%'] = ((change_week/df['Close'][week_n])*100).round(2)
+    df['Chang_M%'] = ((change_month/df['Close'][month_n])*100).round(2)
+
+    # slow stochastic
     low_min = df_reverse['Low'].rolling(ps_sto_fast).min()
     high_max = df_reverse['High'].rolling(ps_sto_fast).max()
     k_fast = 100*(df_reverse['Close'] - low_min) / (high_max - low_min)
     k_slow = k_fast.rolling(ps_sto_slow).mean()
     d_slow = k_slow.rolling(ps_sto_slow).mean()
-    df['%K'] = k_slow.sort_index(ascending=True)
-    df['%D'] = d_slow.sort_index(ascending=True)
+    df['%K'] = k_slow.sort_index(ascending=True).round(2)
+    df['%D'] = d_slow.sort_index(ascending=True).round(2)
     #print(df)
 
     # volume
@@ -173,246 +188,250 @@ def plotIndicatorFromCSV(csvPath,preset,save=False):
     volume_sma_l = volume_sma_s.rolling(10).mean()
     df['Volume_SMA_S'] = volume_sma_s.sort_index(ascending=True)
     df['Volume_SMA_L'] = volume_sma_l.sort_index(ascending=True)
-    df['Volume_SMA_Diff'] = df['Volume_SMA_S']-df['Volume_SMA_L']
 
-    # create indicator
-    bkh_plt = []
-    bkl_plt = []
-    bkm_plt = []
-    bkmh_plt = []
-    bkml_plt = []
-    sma_plt = []
-    sma_l_plt = []
-    buy_point = []
-    sell_point = []
-    k_fast_plt = []
-    d_fast_plt = []
-    k_slow_plt = []
-    d_slow_plt = []
-    for i in range(df['Day'].count()):
-        #print(df['Day'][i])
-        breakout_h = df['High'][i:i+ps_breakout_high].max()
-        breakout_l = df['Low'][i:i+ps_breakout_low].min()
-        breakout_m = (breakout_h+breakout_l)/2
-        breakout_mh = ((breakout_h*2)+breakout_m)/3
-        breakout_ml = (breakout_m+(breakout_l*2))/3
-        sma = df['Close'][i:i+ps_sma].mean()
-        sma_l = df['Close'][i:i+df['Day'][i]].mean()
-        df['Close'][i:i + ps_sma].mean()
+    # break out
+    breakout_h = df_reverse['High'].rolling(ps_breakout_high).max()
+    breakout_l = df_reverse['Low'].rolling(ps_breakout_low).min()
+    df['BreakOut_L'] = breakout_l.sort_index(ascending=True)
+    df['BreakOut_H'] = breakout_h.sort_index(ascending=True)
+    df['BreakOut_M'] = (df['BreakOut_L']+df['BreakOut_H'])*0.5
+    df['BreakOut_MH'] = (df['BreakOut_M']+df['BreakOut_H'])*0.5
+    df['BreakOut_ML'] = (df['BreakOut_L']+df['BreakOut_M'])*0.5
 
-        bkh_plt.append(breakout_h)
-        bkl_plt.append(breakout_l)
-        bkm_plt.append(breakout_m)
-        bkmh_plt.append(breakout_mh)
-        bkml_plt.append(breakout_ml)
-        sma_plt.append(sma)
-        sma_l_plt.append(sma_l)
+    # sma
+    sma_s = df_reverse['Close'].rolling(ps_sma_s).mean()
+    sma_l = df_reverse['Close'].rolling(ps_sma_l).mean()
+    df['SMA_S'] = sma_s.sort_index(ascending=True).round(2)
+    df['SMA_L'] = sma_l.sort_index(ascending=True).round(2)
 
-        if i !=0 and df['High'][i] > bkmh_plt[-2] :
-            buy_point.append((df['Day'][i],df['High'][i]))
-        if i !=0 and df['Low'][i] < bkml_plt[-2] :
-            sell_point.append((df['Day'][i],df['Low'][i]))
+    # trailing stop
+    df['Trailing_Stop'] = (df['BreakOut_H']-df['BreakOut_L']).abs()
 
-    # Plot Figure
-    pltColor = {
-        'bg' : (.9, .9, .9),
-        'text' : (.4, .4, .4),
-        'red' : (0.8, 0.4, 0),
-        'green' : (0.4, 0.8, 0),
-        'blue' : (0, 0.7, 0.9),
-        'yellow' : (1, 0.8, 0)
-    }
-    fig, axes = plt.subplots(nrows=3, ncols=1, figsize=(12, 9), dpi=100,
-                             sharex=False, sharey=False,
-                            gridspec_kw={'height_ratios': [1.5,1,0.5]})
-    fig.patch.set_facecolor((.9, .9, .9))
-    plt.rcParams['figure.facecolor'] = (.9, .9, .9)
-    fig.patch.set_alpha(1)
-    fig.suptitle(quoteJson[quote]["Name"].upper() + '\n' +
-              quoteJson[quote]["Market"] + ' - ' + quoteJson[quote]["Sector"],
-              fontsize=15, color=pltColor['text'])
-    plt.subplots_adjust(left=0.01, bottom=0.05, right=0.97, top=0.90, wspace=0.20, hspace=0.20)
+    # gain / loss ratio
+    gain = (df_reverse['Close']/df_reverse['Low'].rolling(ps_breakout_low).min())-1
+    loss = 1-(df_reverse['Close']/df_reverse['High'].rolling(ps_breakout_low).max())
+    df['Gain'] = gain.sort_index(ascending=True).round(6)
+    df['Loss'] = loss.sort_index(ascending=True).round(6)
+    df['GL_Ratio'] = (gain.rolling(ps_breakout_low).mean()/loss.rolling(ps_breakout_low).mean()).round(2)
+    df['GL_Ratio'] = df['GL_Ratio'].replace([np.inf, -np.inf], 0)
+    df['GL_Ratio_Avg'] = df['GL_Ratio'].sort_index(ascending=False).rolling(3).mean().sort_index(ascending=True)
 
-    #Plot Setup
-    plotTrimMin = 20
-    plotTrimMax = 105
-    axes[0].set_facecolor(pltColor['bg'])
-    axes[0].set_xlim(plotTrimMin,plotTrimMax)
-    axes[0].grid(True, 'both', 'both',color = (.87,.87,.87))
-    axes[0].minorticks_on()
-    axes[0].set_title('Price',color=pltColor['text'])
-    axes[0].yaxis.tick_right()
-    axes[1].grid(True, 'both', 'both', color=(.87, .87, .87))
-    axes[1].minorticks_on()
-    axes[1].set_facecolor(pltColor['bg'])
-    axes[1].set_xlim(plotTrimMin, plotTrimMax)
-    axes[1].set_ylim(0, 100)
-    axes[1].set_title('Slow Stochastic',color=pltColor['text'])
-    axes[1].yaxis.tick_right()
-    axes[2].grid(True, 'both', 'both', color=(.87, .87, .87))
-    axes[2].minorticks_on()
-    axes[2].set_facecolor(pltColor['bg'])
-    axes[2].set_xlim(plotTrimMin, plotTrimMax)
-    axes[2].set_title('Volume', color=pltColor['text'])
-    axes[2].yaxis.tick_right()
+    # drawdown
+    df['Drawdown%'] = df['BreakOut_H']-df['Low']
+    df['Max_Drawdown%'] =  round(df['Drawdown%'].max(),2)
+    df['Avg_Drawdown%'] =  round(df['Drawdown%'].mean(),2)
 
-    # Line Plot
-    axes[0].plot(df['Day'], bkh_plt, linewidth=.7, color=pltColor['green'], linestyle='--')
-    axes[0].plot(df['Day'], bkl_plt, linewidth=.7, color=pltColor['red'], linestyle='--')
-    axes[0].plot(df['Day'], bkm_plt, linewidth=.7, color=(0.7, 0.7, 0.7), linestyle='--')
-    axes[0].plot(df['Day'], bkmh_plt, linewidth=.7, color=pltColor['green'], linestyle='--')
-    axes[0].plot(df['Day'], bkml_plt, linewidth=.7, color=pltColor['red'], linestyle='--')
+    if saveImage or showImage:
+        # Plot Figure
+        pltColor = {
+            'bg' : (.9, .9, .9),
+            'text' : (.4, .4, .4),
+            'red' : (0.8, 0.4, 0),
+            'green' : (0.4, 0.8, 0),
+            'blue' : (0, 0.7, 0.9),
+            'yellow' : (1, 0.8, 0)
+        }
+        fig, axes = plt.subplots(nrows=6, ncols=1, figsize=(12, 9), dpi=100,
+                                 sharex=False, sharey=False,
+                                gridspec_kw={'height_ratios': [1.5,.5,0.5,.5,.5,.5]})
+        fig.patch.set_facecolor((.9, .9, .9))
+        plt.rcParams['figure.facecolor'] = (.9, .9, .9)
+        fig.patch.set_alpha(1)
+        fig.suptitle(quoteJson[quote]["Name"].upper() + '\n' +
+                  quoteJson[quote]["Market"] + ' - ' + quoteJson[quote]["Sector"]+
+                     '\n'+date,
+                  fontsize=15, color=pltColor['text'])
+        plt.subplots_adjust(left=0.01, bottom=0.05, right=0.97, top=0.90, wspace=0.20, hspace=0.00)
 
-    axes[0].plot(df['Day'], clh, color=(.5,.5,.5), linewidth=1, marker='', markersize=1)
-    axes[0].plot(df['Day'][0], clh[0], color=(.5,.5,.5), linewidth=1, marker='o', markersize=7)
-    axes[0].plot(df['Day'], h_plt, color=(0.25, 0.25, 0.25), linewidth=.2, linestyle=':', marker='', markersize=.5)
-    axes[0].plot(df['Day'], l_plt, color=(0.25, 0.25, 0.25), linewidth=.2, linestyle=':', marker='', markersize=.5)
-    axes[0].plot(df['Day'], clh_np, linewidth=.5, color=(0.25, 0.25, 0.25), linestyle=':')
+        #Plot Setup
+        plotTrimMin = 20
+        plotTrimMax = 105
+        axes[0].set_facecolor(pltColor['bg'])
+        axes[0].set_xlim(plotTrimMin,plotTrimMax)
+        axes[0].grid(True, 'both', 'both',color = (.87,.87,.87))
+        axes[0].minorticks_on()
+        axes[0].set_title('Price',color=pltColor['text'],pad=2,size=10,y=0)
+        axes[0].yaxis.tick_right()
+        axes[1].grid(True, 'both', 'both', color=(.87, .87, .87))
+        axes[1].minorticks_on()
+        axes[1].set_facecolor(pltColor['bg'])
+        axes[1].set_xlim(plotTrimMin, plotTrimMax)
+        axes[1].set_ylim(0, 100)
+        axes[1].set_title('Slow Stochastic',color=pltColor['text'],pad=2,size=10,y=0)
+        axes[1].yaxis.tick_right()
+        axes[2].grid(True, 'both', 'both', color=(.87, .87, .87))
+        axes[2].minorticks_on()
+        axes[2].set_facecolor(pltColor['bg'])
+        axes[2].set_xlim(plotTrimMin, plotTrimMax)
+        axes[2].set_title('Volume', color=pltColor['text'],pad=2,size=10,y=0)
+        axes[2].yaxis.tick_right()
+        axes[3].grid(True, 'both', 'both', color=(.87, .87, .87))
+        axes[3].minorticks_on()
+        axes[3].set_facecolor(pltColor['bg'])
+        axes[3].set_xlim(plotTrimMin, plotTrimMax)
+        axes[3].set_title('Gain/Loss Ratio', color=pltColor['text'],pad=2,size=10,y=0)
+        axes[3].yaxis.tick_right()
+        axes[4].grid(True, 'both', 'both', color=(.87, .87, .87))
+        axes[4].minorticks_on()
+        axes[4].set_facecolor(pltColor['bg'])
+        axes[4].set_xlim(plotTrimMin, plotTrimMax)
+        axes[4].set_title('SMA', color=pltColor['text'],pad=2,size=10,y=0)
+        axes[4].yaxis.tick_right()
+        axes[5].grid(True, 'both', 'both', color=(.87, .87, .87))
+        axes[5].minorticks_on()
+        axes[5].set_facecolor(pltColor['bg'])
+        axes[5].set_xlim(plotTrimMin, plotTrimMax)
+        axes[5].set_title('Drawdown %', color=pltColor['text'], pad=2, size=10, y=0)
+        axes[5].yaxis.tick_right()
 
-    axes[1].plot(df['Day'], df['%K'], linewidth=1, color=(.5, .5, .5), linestyle='-')
-    axes[1].plot(df['Day'][0], df['%K'][0], color=(.5, .5, .5), linewidth=1, marker='o', markersize=7)
-    axes[1].plot(df['Day'], df['%D'], linewidth=.5, color=(.5,.5,.5), linestyle=':')
+        # Line Plot
+        axes[0].plot(df['Day'], df['BreakOut_H'], linewidth=.7, color=pltColor['green'], linestyle='--')
+        axes[0].plot(df['Day'], df['BreakOut_L'], linewidth=.7, color=pltColor['red'], linestyle='--')
+        axes[0].plot(df['Day'], df['BreakOut_M'], linewidth=.7, color=(0.7, 0.7, 0.7), linestyle='--')
+        axes[0].plot(df['Day'], df['BreakOut_MH'], linewidth=.7, color=(0.7, 0.7, 0.7), linestyle='--')
+        axes[0].plot(df['Day'], df['BreakOut_ML'], linewidth=.7, color=(0.7, 0.7, 0.7), linestyle='--')
 
-    axes[1].plot([0,120], [80,80], linewidth=.7, color=pltColor['green'], linestyle='--')
-    axes[1].plot([0,120], [20,20], linewidth=.7, color=pltColor['red'], linestyle='--')
+        axes[0].plot([0, 100], [df['BreakOut_H'][0], df['BreakOut_H'][0]], linewidth=.7, color=pltColor['green'], linestyle='-',alpha = 0.5)
+        axes[0].plot([0, 100], [df['BreakOut_L'][0], df['BreakOut_L'][0]], linewidth=.7, color=pltColor['red'], linestyle='-',alpha = 0.5)
 
-    axes[2].fill_between(df['Day'], df['Volume'], linewidth=.5, color=(.5, .5, .5), linestyle=':',alpha=0.2)
-    axes[2].plot(df['Day'], df['Volume_SMA_S'], linewidth=1, color=(.5, .5, .5), linestyle='-')
-    axes[2].plot(df['Day'], df['Volume_SMA_L'], linewidth=.5, color=(.5, .5, .5), linestyle='-')
-    axes[2].plot(df['Day'][0], df['Volume_SMA_S'][0], color=(.5, .5, .5), linewidth=1, marker='o', markersize=7)
+        axes[0].plot(df['Day'], clh, color=(.5,.5,.5), linewidth=1, marker='', markersize=1)
+        axes[0].plot(df['Day'][0], clh[0], color=(.5,.5,.5), linewidth=1, marker='o', markersize=7)
+        axes[0].plot(df['Day'], h_plt, color=(0.25, 0.25, 0.25), linewidth=.2, linestyle=':', marker='', markersize=.5)
+        axes[0].plot(df['Day'], l_plt, color=(0.25, 0.25, 0.25), linewidth=.2, linestyle=':', marker='', markersize=.5)
+        axes[0].plot(df['Day'], clh_np, linewidth=.5, color=(0.25, 0.25, 0.25), linestyle=':')
 
-    # Verticle Line
-    axes[0].plot([95, 95], [bkh_plt[4], bkl_plt[4]], color=(0.5, 0.5, 0.5), linewidth=.2, linestyle='--')
-    axes[0].plot([99, 99], [bkh_plt[1], bkl_plt[1]], color=(0.5, 0.5, 0.5), linewidth=.2, linestyle='--')
-    axes[0].plot([80, 80], [bkh_plt[20], bkl_plt[20]], color=(0.5, 0.5, 0.5), linewidth=.2, linestyle='--')
-    axes[0].plot([60, 60], [bkh_plt[40], bkl_plt[40]], color=(0.5, 0.5, 0.5), linewidth=.2, linestyle='--')
-    axes[0].plot([40, 40], [bkh_plt[60], bkl_plt[60]], color=(0.5, 0.5, 0.5), linewidth=.2, linestyle='--')
-    axes[0].plot([20, 20], [bkh_plt[80], bkl_plt[80]], color=(0.5, 0.5, 0.5), linewidth=.2, linestyle='--')
+        axes[1].plot(df['Day'], df['%K'], linewidth=1, color=(.5, .5, .5), linestyle='-')
+        axes[1].plot(df['Day'][0], df['%K'][0], color=(.5, .5, .5), linewidth=1, marker='o', markersize=7)
+        axes[1].plot(df['Day'], df['%D'], linewidth=.5, color=(.5,.5,.5), linestyle=':')
 
-    # signal point
-    for i in buy_point:
-        axes[0].text(i[0], i[1], '*', size=7, ha='center', va='bottom', color=((0.4, 0.8, 0)))
-    for i in sell_point:
-        axes[0].text(i[0], i[1], '*', size=7, ha='center', va='top', color=((0.8, 0.4, 0)))
+        axes[1].plot([0,120], [80,80], linewidth=.7, color=pltColor['green'], linestyle='--')
+        axes[1].plot([0,120], [20,20], linewidth=.7, color=pltColor['red'], linestyle='--')
 
-    # Text Color By signal
-    if signalS['CHG% W'] >= 0 and signalS['HIGH VAL W CHG'] >= 0 \
-            and df['%K'][0] > df['%D'][0] and df['%K'][0] < 80:
-        axes[0].text(100, min(df['Low']), quote + ' : ' + str(signalS['PRICE']), size=40, ha='right', va='bottom',
-                 color=pltColor['green'],alpha = .5)
-    elif signalS['CHG% W'] >= 0 and signalS['HIGH VAL W CHG'] >= 0 \
-            and df['%K'][0] > df['%D'][0] and df['%K'][0] > 80:
-        axes[0].text(100, min(df['Low']), quote + ' : ' + str(signalS['PRICE']), size=40, ha='right', va='bottom',
-                     color=pltColor['blue'], alpha=.5)
-    else:
-        axes[0].text(100, min(df['Low']), quote + ' : ' + str(signalS['PRICE']), size=40, ha='right', va='bottom',
-                 color=(.5,.5,.5),alpha = .5)
+        axes[2].bar(df['Day'], df['Volume'], linewidth=.5, color=(.5, .5, .5), linestyle=':',alpha=0.2)
+        axes[2].plot(df['Day'], df['Volume_SMA_S'], linewidth=1, color=(.5, .5, .5), linestyle='-')
+        axes[2].plot(df['Day'], df['Volume_SMA_L'], linewidth=.5, color=(.5, .5, .5), linestyle='-')
+        axes[2].plot(df['Day'][0], df['Volume_SMA_S'][0], color=(.5, .5, .5), linewidth=1, marker='o', markersize=7)
 
-    # Text
-    axes[0].text(100, min(df['Low']), 'by Burasate.U', size=12, ha='right', va='top', color=(.5,.5,.5))
-    axes[0].text(100, signalS['BreakOut L'], '  ' + str(signalS['BreakOut L']), size=10, ha='left', va='center',
-             color=pltColor['text'])
-    axes[0].text(100, signalS['BreakOut H'], '  ' + str(signalS['BreakOut H']), size=10, ha='left', va='center',
-             color=pltColor['text'])
-    axes[0].text(100, signalS['BreakOut M'], '  ' + str(signalS['BreakOut M']), size=10, ha='left', va='center',
-             color=pltColor['text'])
-    axes[0].text(plotTrimMin+1, df['High'].max(),
-                 'Preset Name: {}\n'.format(preset)+
-                 'Preset Description : {}\n'.format(ps_description)+
-                 'Value greater than  : {}\n'.format(ps_value)+
-                 'Price : {} - {}\n'.format(ps_priceMin,ps_priceMax)+
-                 'SMA : {} Days\n'.format(ps_sma)+
-                 'Breakout High : {} Days\n'.format(ps_breakout_high)+
-                 'Breakout Low : {} Days\n'.format(ps_breakout_low)+
-                 'STO Fast : {} Days\n'.format(ps_sto_fast)+
-                 'STO Slow : {}\n'.format(ps_sto_slow)
-             , size=10, ha='left', va='top', color=((.6, .6, .6)))
+        axes[3].fill_between(df['Day'], df['GL_Ratio'], linewidth=1, color=(.5, .5, .5), linestyle='-',alpha=0.2)
+        axes[3].plot(df['Day'], df['GL_Ratio'], linewidth=.7, color=(.5, .5, .5), linestyle='-')
+        axes[3].plot(df['Day'], df['GL_Ratio_Avg'], linewidth=.5, color=(.5,.5,.5), linestyle=':')
+        axes[3].plot(df['Day'][0], df['GL_Ratio'][0], color=(.5, .5, .5), linewidth=1, marker='o', markersize=7)
 
-    """
-    # Plot Figure
-    fig = plt.figure(figsize=(21, 9), dpi=100)
-    ax = plt.axes()
-    ax.set_facecolor((1, 1, 1))
-    fig.patch.set_facecolor((1, 1, 1))
-    plt.subplots_adjust(left=0.02, bottom=0.05, right=0.98, top=0.90, wspace=0.20, hspace=0.20)
-    plt.xlabel('Day')
-    plt.ylabel('Price')
-    plt.tick_params(axis='y', which='both', labelleft='off', labelright='on', direction='inout')
+        axes[4].plot(df['Day'], df['SMA_S'], linewidth=1, color=(.5, .5, .5), linestyle='-')
+        axes[4].plot(df['Day'], df['SMA_L'], linewidth=1, color=(.5,.5,.5), linestyle='--')
+        axes[4].plot(df['Day'][0], df['SMA_S'][0], color=(.5, .5, .5), linewidth=1, marker='o', markersize=7)
 
-    # Text
-    plt.title(quoteJson[quote]["Name"].upper() + '\n' +
-              quoteJson[quote]["Market"] + ' - ' + quoteJson[quote]["Sector"],
-              fontsize=20, color=(.4, .4, .4))
-    if signalS['CHG% W'] >= 0 and signalS['HIGH VAL W CHG'] >= 0:
-        plt.text(100, min(df['Low']), quote + ' : ' + str(signalS['PRICE']), size=60, ha='right', va='bottom',
-                 color=(0.4, 0.8, 0))
-    else:
-        plt.text(100, min(df['Low']), quote + ' : ' + str(signalS['PRICE']), size=60, ha='right', va='bottom',
-                 color=(.7, .7, .7))
-    plt.text(100, min(df['Low']), 'by Burasate.U', size=12, ha='right', va='top', color=(.7, .7, .7))
-    plt.text(min(df['Day'] - 3), max(df['High']),
-             'Data From Yahoo Finance\n' + signalS['DATE'] + '\n\n' +
-             'Price : {}\nVolume : {} M\n'.format(signalS['PRICE'], (signalS['VOLUME']) / 1000000) + '\n' +
-             'Week Chg : {}%\nMonth Chg : {}%\n'.format(signalS['CHG% W'], signalS['CHG% M']) + '\n' +
-             'Break Low : {}\nBreak High : {}\nTrailling {} - {}%\n'.format(signalS['BreakOut L'], signalS['BreakOut H'],
-                                                                            signalS['TRAILLING%'] / 2, signalS['TRAILLING%']) + '\n' +
-             'Volume Week Chg : {} M\nValue Week Chg : {} M Baht\n'.format(round(signalS['HIGH VOL W CHG'] / 1000000),
-                                                                           round(
-                                                                               signalS['HIGH VAL W CHG'] / 1000000)) + '\n' +
-             'P/E : {}\nP/BV : {}\n'.format(quoteJson[quote]["P/E"], quoteJson[quote]["P/BV"]) +
-             'Dividend : {}\nMarket Cap : {}\nPar : {}\n'.format(quoteJson[quote]["Dividend"],
-                                                                 quoteJson[quote]["Market Cap"],
-                                                                 quoteJson[quote]["Par"]) +
-             'Authorized Capital : {}\nPaid-up Capital : {}\n'.format(quoteJson[quote]["Authorized Capital"],
-                                                                      quoteJson[quote]["Paid-up Capital"])
-             , size=15, ha='left', va='top', color=((.6, .6, .6)))
-    plt.text(100, signalS['BreakOut L'], '  '+str(signalS['BreakOut L']), size=15, ha='left', va='center', color=((0.8, 0.4, 0)))
-    plt.text(100, signalS['BreakOut H'], '  '+str(signalS['BreakOut H']), size=15, ha='left', va='center', color=((0.4, 0.8, 0)))
-    plt.text(100, signalS['BreakOut M'], '  '+str(signalS['BreakOut M']), size=15, ha='left', va='center', color=((1, 0.8, 0)))
+        axes[5].fill_between(df['Day'],  df['Drawdown%'], linewidth=1, color=(.5, .5, .5), linestyle='-', alpha=0.2)
+        axes[5].plot(df['Day'],  df['Drawdown%'], linewidth=.7, color=(.5, .5, .5), linestyle='-')
+        axes[5].plot(df['Day'][0], df['Drawdown%'][0], color=(.5, .5, .5), linewidth=1, marker='o', markersize=7)
 
-    #signal point
-    for i in buy_point:
-        plt.text(i[0],i[1] , '+', size=5, ha='center', va='bottom', color=((0.4, 0.8, 0)))
-    for i in sell_point:
-        plt.text(i[0],i[1] , '+', size=5, ha='center', va='top', color=((0.8, 0.4, 0)))
+        axes[5].plot([0, 120], [df['Max_Drawdown%'][0], df['Max_Drawdown%'][0]], linewidth=.7, color=pltColor['red'], linestyle='--')
+        axes[5].plot([0, 120], [df['Avg_Drawdown%'][0], df['Avg_Drawdown%'][0]], linewidth=.7, color=pltColor['blue'], linestyle='--')
 
-    # Verticle Line
-    plt.plot([95, 95], [bkh_plt[4], bkl_plt[4]], color=(0.5, 0.5, 0.5), linewidth=.4, linestyle='--')
-    plt.plot([99, 99], [bkh_plt[1], bkl_plt[1]], color=(0.5, 0.5, 0.5), linewidth=.4, linestyle='--')
-    plt.plot([80, 80], [bkh_plt[20], bkl_plt[20]], color=(0.5, 0.5, 0.5), linewidth=.4, linestyle='--')
-    plt.plot([60, 60], [bkh_plt[40], bkl_plt[40]], color=(0.5, 0.5, 0.5), linewidth=.4, linestyle='--')
-    plt.plot([40, 40], [bkh_plt[60], bkl_plt[60]], color=(0.5, 0.5, 0.5), linewidth=.4, linestyle='--')
-    plt.plot([20, 20], [bkh_plt[80], bkl_plt[80]], color=(0.5, 0.5, 0.5), linewidth=.4, linestyle='--')
+        # Text Color By signal
+        axes[0].text(100, min(df['Low']), quote + ' : ' + str(df['Close'][0]), size=40, ha='right', va='bottom',
+            color=(.5,.5,.5),alpha = .5)
 
-    # Line
-    plt.plot(df['Day'], clh, color=(0, 0.4, 0.8), linewidth=1,marker = '',markersize=1)
-    plt.plot(df['Day'], h_plt, color=(0.2, 0.2, 0.2), linewidth=.2, linestyle=':',marker = '',markersize=.5)
-    plt.plot(df['Day'], l_plt, color=(0.2, 0.2, 0.2), linewidth=.2, linestyle=':',marker = '',markersize=.5)
-    plt.plot(df['Day'], clh_np, linewidth=1, color='grey', linestyle=':')
+        # Text
+        axes[0].text(100, min(df['Low']), 'by Burasate.U', size=12, ha='right', va='top', color=(.5,.5,.5))
+        axes[0].text(100, df['BreakOut_L'][0], '  ' + str(df['BreakOut_L'][0]), size=10, ha='left', va='center',
+                 color=pltColor['text'])
+        axes[0].text(100, df['BreakOut_H'][0], '  ' + str(df['BreakOut_H'][0]), size=10, ha='left', va='center',
+                 color=pltColor['text'])
+        axes[0].text(plotTrimMin+1, df['High'].max(),
+                     'Preset Name: {}\n'.format(preset)+
+                     'Preset Description : {}\n'.format(ps_description)+
+                     'Value greater than  : {}\n'.format(ps_value)+
+                     'Price : {} - {}\n'.format(ps_priceMin,ps_priceMax)+
+                     'SMA : {}/{} Days\n'.format(ps_sma_s,ps_sma_l)+
+                     'Breakout High : {} Days\n'.format(ps_breakout_high)+
+                     'Breakout Low : {} Days\n'.format(ps_breakout_low)+
+                     'STO Fast : {} Days\n'.format(ps_sto_fast)+
+                     'STO Slow : {}\n'.format(ps_sto_slow)
+                 , size=10, ha='left', va='top', color=((.6, .6, .6)))
 
-    #plt.plot(df['Day'], k_fast_plt, linewidth=1, color='grey', linestyle=':')
-    plt.plot(df['Day'], df['%D'], linewidth=1, color='grey', linestyle=':')
-    plt.plot(df['Day'], df['%K'], linewidth=1, color='grey', linestyle=':')
-    #plt.plot(df['Day'], df['D_Slow'], linewidth=1, color='grey', linestyle=':')
+        axes[5].text(plotTrimMin + 1, df['Max_Drawdown%'][0],
+                     'Max Drawdown : {}%\n'.format(df['Max_Drawdown%'][0]) +
+                     'Avg Drawdown : {}%\n'.format(df['Avg_Drawdown%'][0])
+                     , size=10, ha='left', va='top', color=((.6, .6, .6)))
 
-    plt.plot(df['Day'], bkh_plt, linewidth=1, color=(0.4, 0.8, 0), linestyle='-')
-    plt.plot(df['Day'], bkl_plt, linewidth=1, color=(0.8, 0.4, 0), linestyle='-')
-    plt.plot(df['Day'], bkm_plt, linewidth=1, color=(1, 0.8, 0), linestyle='--')
-    plt.plot(df['Day'], bkmh_plt, linewidth=1, color=(0.4, 0.8, 0), linestyle=':')
-    plt.plot(df['Day'], bkml_plt, linewidth=1, color=(0.8, 0.4, 0), linestyle=':')
-    #plt.plot(df['Day'], sma_plt, color=(0.2, 0.7, 1.0), linewidth=.5, linestyle='--')
-    #plt.plot(df['Day'], sma_l_plt, color=(0.7, 0.2, 0.5), linewidth=.5, linestyle='--')
+        # Finally
+        if saveImage:
+            imgName = '_'.join([preset,quote])+'.png'
+            savePath = dataPath+'/analysis_img/' + imgName
+            print(imgName)
+            plt.savefig(savePath,facecolor=fig.get_facecolor())
+        if showImage:
+            plt.show()
+        plt.close()
+    #df.to_csv(dataPath+os.sep+'test.csv',index=False)
+    return df
 
-    """
-    # Finally
-    if save:
-        savePath = dataPath+'/analysis_img/' + '_'.join([preset,quote]) + '.png'
-        print(savePath)
-        plt.savefig(savePath,facecolor=fig.get_facecolor())
-    else:
-        plt.show()
+def getSignalAllPreset(*_):
+    signal_df = pd.DataFrame()
+    # Clear Directory
+    imgPath = dataPath + '/analysis_img/'
+    oldImgFiles = os.listdir(imgPath)
+    for f in oldImgFiles:
+        os.remove(imgPath + f)
 
-    plt.close()
+    for file in histFileList:
+        quote = file.split('.')[0]
+        #print(quote)
+        for ps in presetJson:
+            try:
+                df = getAnalysis(histPath+os.sep+file, ps,saveImage=False,showImage=False)
+                df['Preset'] = ps
+                df['Quote'] = quote
+
+                # Condition
+                filter_condition = (
+                    df['Value_M'][0] >= presetJson[ps]["value"]/1000000 and
+                    df['Close'][0] > presetJson[ps]["priceMin"] and
+                    df['Close'][0] < presetJson[ps]["priceMax"]
+                )
+                entry_condition = (
+                    df['SMA_S'][0] > df['SMA_L'][0] and
+                    df['%K'][0] > df['%D'][0] and
+                    df['%K'][0] < 80 and
+                    df['Volume_SMA_S'][0] > df['Volume_SMA_L'][0] and
+                    df['GL_Ratio'][0] > df['GL_Ratio_Avg'][0]
+                )
+                exit_condition = (
+                    df['SMA_S'][0] < df['SMA_L'][0] and
+                    df['GL_Ratio'][0] < df['GL_Ratio_Avg'][0]
+                )
+                if filter_condition and entry_condition:
+                    print('Preset : {} | Entry : {}'.format(ps,file))
+                    df['Signal'] = 'Entry'
+                    signal_df = signal_df.append(df.iloc[0])
+                    getAnalysis(histPath + os.sep + file, ps, saveImage=True, showImage=False)
+                elif filter_condition and exit_condition:
+                    print('Preset : {} | Exit : {}'.format(ps, file))
+                    df['Signal'] = 'Exit'
+                    signal_df = signal_df.append(df.iloc[0])
+                elif filter_condition:
+                    #print('Preset : {} | Unknow : {}'.format(ps, file))
+                    #df['Signal'] = 'Unknow'
+                    signal_df = signal_df.append(df.iloc[0])
+            except:
+                pass
+
+    signal_df = signal_df.sort_values(['Signal','Preset','Value_M','GL_Ratio','ATR','Max_Drawdown%'], ascending=[True,True,False,False,True,True])
+    signal_df.to_csv(dataPath+os.sep+'signal.csv',index=False)
+
+def backTesting(quote):
+    #import csv from yahoofinance
+    filePath = dataPath+'/backtesting_hist/'+quote+'.BK.csv'
+    df_hist = pd.read_csv(filePath)
+
+    price = []
+    for i in range(99,df_hist['Date'].count()):
+        print(i)
+        df_sim = df_hist.iloc[i-100:i]
+        df_sim = df_sim.sort_index(ascending=False)
+        #print(df_sim['Adj Close'].iloc[0])
+        print(df_sim['Close'])
 
 def getImageBuySignalAll(*_):
     #Clear Directory
@@ -426,12 +445,13 @@ def getImageBuySignalAll(*_):
         signalS = getSignalFromPreset(ps)
 
         for q in signalS['BUY']:
-            plotIndicatorFromCSV(histPath+q+'.csv',ps,True)
+            getAnalysis(histPath+q+'.csv',ps,saveImage=True,showImage=False)
 
 
 if __name__ == '__main__' :
-    #getImageBuySignalAll()
-    plotIndicatorFromCSV(histPath + 'BGRIM' + '.csv', 'S3', False)
+    #getAnalysis(histPath + 'TQM' + '.csv', 'S2',saveImage=False,showImage=True)
+    getSignalAllPreset()
+    #backTesting('KBANK')
     pass
 
 

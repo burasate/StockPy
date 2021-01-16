@@ -18,7 +18,8 @@ stockHistorical.LoadAllHist()
 
 
 import stockAnalysis
-stockAnalysis.getImageBuySignalAll()
+#stockAnalysis.getImageBuySignalAll()
+stockAnalysis.getSignalAllPreset()
 
 
 import lineNotify
