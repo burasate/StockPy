@@ -519,3 +519,14 @@ update/data/backtesting_hist/S1_GULF.png
 update/data/backtesting_hist/S1_CPALL.png
 update/data/backtesting_hist/IVL.tmp
 update/data/backtesting_hist/KBANK.tmp
+update/data/backtesting_hist/CPALL.tmp
+update/data/backtesting_hist/S1_AMATA.png
+update/data/backtesting_hist/S1_TQM.png
+update/data/backtesting_hist/S1_TU.png
+update/data/backtesting_hist/S2_AMATA.png
+update/data/backtesting_hist/S2_TQM.png
+update/data/backtesting_hist/S2_TU.png
+update/data/backtesting_hist/S3_AMATA.png
+update/data/backtesting_hist/S3_TQM.png
+update/data/backtesting_hist/S3_TU.png
+*.png

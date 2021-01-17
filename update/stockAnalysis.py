@@ -425,7 +425,7 @@ def backTesting(quote,preset):
     #import csv from yahoofinance
     filePath = dataPath+'/backtesting_hist/'+quote+'.BK.csv'
     tmpFilePath = dataPath+'/backtesting_hist/'+quote+'.tmp'
-    df_hist = pd.read_csv(filePath)
+    df_hist = pd.read_csv(filePath).tail(500)
     df_bt = pd.DataFrame()
 
     for i in range(df_hist['Date'].count()):
@@ -434,7 +434,7 @@ def backTesting(quote,preset):
         if row_count >= 100:
             df_select['Day'] = np.linspace(1,100,100).tolist()
             df_reverse = df_select.sort_index(ascending=False).reset_index(drop=True)
-            print (df_reverse['Date'][0])
+            #print (df_reverse['Date'][0])
 
             #create tmp file
             df_reverse.to_csv(tmpFilePath,index=False)
@@ -454,20 +454,23 @@ def backTesting(quote,preset):
                     df['SMA_S'][0] > df['SMA_L'][0] and
                     df['%K'][0] > df['%D'][0] and
                     df['%K'][0] < 80 and
-                    df['Volume_SMA_S'][0] > df['Volume_SMA_L'][0] and
+                    #df['Volume_SMA_S'][0] > df['Volume_SMA_L'][0] and
                     df['GL_Ratio'][0] > df['GL_Ratio_Avg'][0]
             )
             exit_condition = (
                     df['SMA_S'][0] < df['SMA_L'][0] and
                     df['GL_Ratio'][0] < df['GL_Ratio_Avg'][0]
             )
-            if filter_condition and entry_condition:
+            #if filter_condition and entry_condition:
+            if entry_condition:
                 df['Signal'] = 'Entry'
                 df_bt = df_bt.append(df.iloc[0])
-            elif filter_condition and exit_condition:
+            #elif filter_condition and exit_condition:
+            elif exit_condition:
                 df['Signal'] = 'Exit'
                 df_bt = df_bt.append(df.iloc[0])
-            elif filter_condition:
+            #elif filter_condition:
+            else:
                 df_bt = df_bt.append(df.iloc[0])
 
     #Reset Index
@@ -481,12 +484,20 @@ def backTesting(quote,preset):
     buy_hold = []
     buy_hold_chg = 0
     hold = []
-    hold_chg = 0 - df_bt.iloc[0]['Chang_D%']
+    hold_chg = 0
     signal = np.nan
     for i in range(df_bt['Date'].count()):
+        #change_month = df_reverse['Close'].diff(month_n).sort_index(ascending=False)
+        #df['Chang_D%'] = ((change_day / df['Close'][day_n]) * 100).round(2)
+
         day = day + 1
         new_day.append(day)
-        hold_chg = hold_chg + df_bt.iloc[i]['Chang_D%']
+        if day > 1:
+            hold_chg = hold_chg + (df_bt.iloc[i]['Close']-df_bt.iloc[i-1]['Close'])
+            #print(df_bt.iloc[i]['Date'])
+            #print(df_bt.iloc[i]['Day'])
+            #print(hold_chg)
+            #print(df_bt.iloc[i]['Close'])
         hold.append(hold_chg)
         if df_bt.iloc[i]['Signal'] == 'Entry':
             signal = 'Entry'
@@ -495,6 +506,7 @@ def backTesting(quote,preset):
 
         new_signal.append(signal)
         if new_signal[-1] == 'Entry':
+            #buy_hold_chg = buy_hold_chg + df_bt.iloc[i]['Chang_D%']
             buy_hold_chg = buy_hold_chg + df_bt.iloc[i]['Chang_D%']
         buy_hold.append(buy_hold_chg)
 
@@ -503,9 +515,15 @@ def backTesting(quote,preset):
     #print (df_bt['Signal'].tolist())
     df_bt['Day'] = new_day
     df_bt['Stg_Hold'] = hold
+    #print(df['Close'])
+    df_bt['Stg_Hold'] = (df_bt['Stg_Hold']/df_bt['Close'].tolist()[0])*100
+    # df['Chang_D%'] = ((change_day / df['Close'][day_n]) * 100).round(2)
     df_bt['Stg_BuyHold'] = buy_hold
     df_bt['Stg_BuyHold'] = df_bt['Stg_BuyHold'].round(2)
     df_bt['Stg_Hold'] = df_bt['Stg_Hold'].round(2)
+
+    print(df_bt['Date'].tolist()[0])
+    print(df_bt['Date'].tolist()[-1])
 
     # Plot Figure
     pltColor = {
@@ -535,20 +553,34 @@ def backTesting(quote,preset):
     axes[1].set_facecolor(pltColor['bg'])
     axes[1].grid(True, 'both', 'both', color=(.87, .87, .87))
     axes[1].minorticks_on()
-    axes[1].set_title('Performance', color=pltColor['text'], pad=2, size=10, y=0)
+    axes[1].set_title('Performance %', color=pltColor['text'], pad=2, size=10, y=0)
     axes[1].yaxis.tick_right()
 
     axes[0].plot(df_bt['Day'], df_bt['Close'], linewidth=1, color=(.5, .5, .5), linestyle='-')
 
     axes[1].plot(df_bt['Day'], df_bt['Stg_Hold'], linewidth=.7, color=(.5, .5, .5), linestyle='-')
-    axes[1].plot(df_bt['Day'], df_bt['Stg_BuyHold'], linewidth=1, color=(.5, .5, .5), linestyle='-')
+    axes[1].plot(df_bt['Day'], df_bt['Stg_BuyHold'], linewidth=1, color=pltColor['blue'], linestyle='-')
+    axes[1].plot(df_bt['Day'], [0]*df_bt['Day'].count(), linewidth=.7, color=pltColor['red'], linestyle='--')
 
-    imgName = '_'.join([preset, quote]) + '.png'
+    axes[0].text(df_bt['Day'].max(), df['Close'][0], '  ' + str(df['Close'][0]), size=10, ha='left', va='center',
+                 color=pltColor['text'])
+    axes[1].text(df_bt['Day'].max(), df_bt['Stg_BuyHold'].tolist()[-1],
+                 '  ' + str(df_bt['Stg_BuyHold'].tolist()[-1]) + ' %',
+                 size=10, ha='left', va='center',color=pltColor['blue'])
+    axes[1].text(df_bt['Day'].max(), df_bt['Stg_Hold'].tolist()[-1],
+                 '  ' + str(df_bt['Stg_Hold'].tolist()[-1]) + ' %',
+                 size=10, ha='left', va='center', color=pltColor['text'])
+
+    imgName = '_'.join([quote,preset]) + '.png'
     savePath = dataPath + '/backtesting_hist/' + imgName
     print(imgName)
+    try:
+        os.remove(savePath)
+    except:pass
     plt.savefig(savePath, facecolor=fig.get_facecolor())
     #plt.show()
     os.remove(tmpFilePath)
+    plt.close()
 
 def getImageBuySignalAll(*_):
     #Clear Directory
@@ -567,12 +599,17 @@ def getImageBuySignalAll(*_):
 
 if __name__ == '__main__' :
     #getAnalysis(histPath + 'TQM' + '.csv', 'S2',saveImage=False,showImage=True)
-    #getSignalAllPreset()
+    getSignalAllPreset()
+    """
     for ps in presetJson:
+        backTesting('TU',ps)
+        backTesting('AMATA',ps)
+        backTesting('TQM',ps)
         backTesting('GULF',ps)
         backTesting('CPALL',ps)
         backTesting('IVL',ps)
         backTesting('KBANK',ps)
+    """
     pass
 
 
