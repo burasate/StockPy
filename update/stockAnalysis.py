@@ -206,9 +206,6 @@ def getAnalysis(csvPath,preset,saveImage=False,showImage=False):
     df['SMA_S'] = sma_s.sort_index(ascending=True).round(2)
     df['SMA_L'] = sma_l.sort_index(ascending=True).round(2)
 
-    # trailing stop
-    df['Trailing_Stop'] = (df['BreakOut_H']-df['BreakOut_L']).abs()
-
     # gain / loss ratio
     gain = (df_reverse['Close']/df_reverse['Low'].rolling(ps_breakout_low).min())-1
     loss = 1-(df_reverse['Close']/df_reverse['High'].rolling(ps_breakout_low).max())
@@ -219,7 +216,7 @@ def getAnalysis(csvPath,preset,saveImage=False,showImage=False):
     df['GL_Ratio_Avg'] = df['GL_Ratio'].sort_index(ascending=False).rolling(3).mean().sort_index(ascending=True)
 
     # drawdown
-    df['Drawdown%'] = df['BreakOut_H']-df['Low']
+    df['Drawdown%'] = 100 * ((df['BreakOut_H']-df['Low'])/df['BreakOut_H'])
     df['Max_Drawdown%'] =  round(df['Drawdown%'].max(),2)
     df['Avg_Drawdown%'] =  round(df['Drawdown%'].mean(),2)
 
@@ -465,8 +462,7 @@ def backTesting(quote,preset):
             if entry_condition:
                 df['Signal'] = 'Entry'
                 df_bt = df_bt.append(df.iloc[0])
-            #elif filter_condition and exit_condition:
-            elif exit_condition:
+            elif filter_condition and exit_condition:
                 df['Signal'] = 'Exit'
                 df_bt = df_bt.append(df.iloc[0])
             #elif filter_condition:
@@ -487,9 +483,6 @@ def backTesting(quote,preset):
     hold_chg = 0
     signal = np.nan
     for i in range(df_bt['Date'].count()):
-        #change_month = df_reverse['Close'].diff(month_n).sort_index(ascending=False)
-        #df['Chang_D%'] = ((change_day / df['Close'][day_n]) * 100).round(2)
-
         day = day + 1
         new_day.append(day)
         if day > 1:
@@ -507,7 +500,7 @@ def backTesting(quote,preset):
         new_signal.append(signal)
         if new_signal[-1] == 'Entry':
             #buy_hold_chg = buy_hold_chg + df_bt.iloc[i]['Chang_D%']
-            buy_hold_chg = buy_hold_chg + df_bt.iloc[i]['Chang_D%']
+            buy_hold_chg = buy_hold_chg + (df_bt.iloc[i]['Close']-df_bt.iloc[i-1]['Close'])
         buy_hold.append(buy_hold_chg)
 
     df_bt['Signal'] = new_signal
@@ -515,10 +508,10 @@ def backTesting(quote,preset):
     #print (df_bt['Signal'].tolist())
     df_bt['Day'] = new_day
     df_bt['Stg_Hold'] = hold
-    #print(df['Close'])
     df_bt['Stg_Hold'] = (df_bt['Stg_Hold']/df_bt['Close'].tolist()[0])*100
     # df['Chang_D%'] = ((change_day / df['Close'][day_n]) * 100).round(2)
     df_bt['Stg_BuyHold'] = buy_hold
+    df_bt['Stg_BuyHold'] = (df_bt['Stg_BuyHold']/df_bt['Close'].tolist()[0])*100
     df_bt['Stg_BuyHold'] = df_bt['Stg_BuyHold'].round(2)
     df_bt['Stg_Hold'] = df_bt['Stg_Hold'].round(2)
 
@@ -598,17 +591,19 @@ def getImageBuySignalAll(*_):
 
 
 if __name__ == '__main__' :
-    #getAnalysis(histPath + 'TQM' + '.csv', 'S2',saveImage=False,showImage=True)
-    getSignalAllPreset()
+    getAnalysis(histPath + 'NER' + '.csv', 'S3',saveImage=False,showImage=True)
+    #getSignalAllPreset()
     """
     for ps in presetJson:
-        backTesting('TU',ps)
-        backTesting('AMATA',ps)
-        backTesting('TQM',ps)
-        backTesting('GULF',ps)
-        backTesting('CPALL',ps)
-        backTesting('IVL',ps)
-        backTesting('KBANK',ps)
+        #backTesting('TU',ps)
+        #backTesting('AMATA',ps)
+        #backTesting('TQM',ps)
+        #backTesting('GULF',ps)
+        #backTesting('CPALL',ps)
+        #backTesting('IVL',ps)
+        #backTesting('KBANK',ps)
+        backTesting('SAWAD',ps)
+        #backTesting('STA',ps)
     """
     pass
 
