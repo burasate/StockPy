@@ -367,6 +367,7 @@ def getAnalysis(csvPath,preset,saveImage=False,showImage=False):
     return df
 
 def getSignalAllPreset(*_):
+    rec_date = dt.date.today().isoformat()
     signal_df = pd.DataFrame()
     # Clear Directory
     imgPath = dataPath + '/analysis_img/'
@@ -382,6 +383,7 @@ def getSignalAllPreset(*_):
                 df = getAnalysis(histPath+os.sep+file, ps,saveImage=False,showImage=False)
                 df['Preset'] = ps
                 df['Quote'] = quote
+                df['Rec_Date'] = rec_date
 
                 # Condition Setting
                 filter_condition = (
@@ -401,22 +403,30 @@ def getSignalAllPreset(*_):
                         df['GL_Ratio'][0] < df['GL_Ratio_Avg'][0]
                 )
 
+                # Trade Entry
                 if filter_condition and entry_condition:
                     print('Preset : {} | Entry : {}'.format(ps,file))
                     df['Signal'] = 'Entry'
                     signal_df = signal_df.append(df.iloc[0])
                     getAnalysis(histPath + os.sep + file, ps, saveImage=True, showImage=False)
+                # Trade Exit
                 elif filter_condition and exit_condition:
                     print('Preset : {} | Exit : {}'.format(ps, file))
                     df['Signal'] = 'Exit'
                     signal_df = signal_df.append(df.iloc[0])
-                elif filter_condition:
-                    signal_df = signal_df.append(df.iloc[0])
+                #elif filter_condition:
+                    #signal_df = signal_df.append(df.iloc[0])
             except:
                 pass
 
     signal_df = signal_df.sort_values(['Signal','Preset','Value_M','GL_Ratio','ATR','Max_Drawdown%'], ascending=[True,True,False,False,True,True])
-    signal_df.to_csv(dataPath+os.sep+'signal.csv',index=False)
+    csvPath = dataPath + os.sep + 'signal.csv'
+
+    # New Signal DataFrame
+    new_signal_df = pd.read_csv(csvPath)
+    new_signal_df = new_signal_df[new_signal_df['Rec_Date'] != rec_date]
+    new_signal_df = new_signal_df.append(signal_df)
+    new_signal_df.to_csv(csvPath,index=False)
 
 def backTesting(quote,preset):
     #import csv from yahoofinance
@@ -575,24 +585,11 @@ def backTesting(quote,preset):
     os.remove(tmpFilePath)
     plt.close()
 
-def getImageBuySignalAll(*_):
-    #Clear Directory
-    imgPath = dataPath+'/analysis_img/'
-    oldImgFiles = os.listdir(imgPath)
-    for f in oldImgFiles:
-        os.remove(imgPath+f)
-
-    for ps in presetJson:
-        print('get signal from preset \"{}\"'.format(ps))
-        signalS = getSignalFromPreset(ps)
-
-        for q in signalS['BUY']:
-            getAnalysis(histPath+q+'.csv',ps,saveImage=True,showImage=False)
-
 
 if __name__ == '__main__' :
-    getAnalysis(histPath + 'NER' + '.csv', 'S3',saveImage=False,showImage=True)
-    #getSignalAllPreset()
+    #getAnalysis(histPath + 'NER' + '.csv', 'S2',saveImage=False,showImage=True)
+    getSignalAllPreset()
+
     """
     for ps in presetJson:
         #backTesting('TU',ps)

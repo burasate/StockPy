@@ -53,6 +53,7 @@ def signalReportToUser(*_):
 
             # Load Signal Data
             df = pd.read_csv(dataPath + os.sep + 'signal.csv')
+            df = df[df['Rec_Date'] == df['Rec_Date'].max()]
 
             df =  df[df['Preset']==preset]
             entry_list =  df[df['Signal']=='Entry']['Quote'].tolist()
