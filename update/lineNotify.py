@@ -69,16 +69,16 @@ def signalReportToUser(*_):
             msg_signal = date + '\n' +\
                         'Preset Name \"{}\" '.format(preset) +\
                         '\n' + text_buy + text_sell
-            print(msg_signal)
-            sendNotifyMassage(token, msg_signal)
+            #print(msg_signal)
+            #sendNotifyMassage(token, msg_signal)
 
             #Send Images
             for i in range(df[df['Preset'] == preset]['Preset'].count()):
                 select = df[df['Preset'] == preset].iloc[i]
                 q_msg = '▹ {} {}   \n'.format(select['Quote'], select['Close'])+\
                         'Month Chg {}% \n'.format(select['Chang_M%'])+\
-                        'Break Out {} / {}\n'.format(select['BreakOut_L'],select['BreakOut_H'])+\
-                        'Drawdown Avg {}% / Max {}%\n'.format(select['Avg_Drawdown%'],select['Max_Drawdown%'])+ \
+                        'Break Out {}/{}\n'.format(select['BreakOut_L'],select['BreakOut_H'])+\
+                        'Trailing {}%-{}%\n'.format(select['Drawdown%'].round(0),select['Max_Drawdown%'].round(0))+ \
                         'Value {} m'.format(select['Value_M'])
                 #print (q_msg)
 
@@ -87,7 +87,7 @@ def signalReportToUser(*_):
                 for i in range(timeOut):
                     try:
                         imgFile = '{}_{}.png'.format(preset,select['Quote'])
-                        sendNotifyImageMsg(token, imgPath + imgFile, q_msg)
+                        #sendNotifyImageMsg(token, imgPath + imgFile, q_msg)
                         break
                     except:
                         if i >= timeOut:

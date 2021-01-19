@@ -231,7 +231,7 @@ def getAnalysis(csvPath,preset,saveImage=False,showImage=False):
             'yellow' : (1, 0.8, 0)
         }
         fig, axes = plt.subplots(nrows=6, ncols=1, figsize=(12, 9), dpi=100,
-                                 sharex=False, sharey=False,
+                                 sharex=True, sharey=False,
                                 gridspec_kw={'height_ratios': [1.5,.5,0.5,.5,.5,.5]})
         fig.patch.set_facecolor((.9, .9, .9))
         plt.rcParams['figure.facecolor'] = (.9, .9, .9)
@@ -349,10 +349,18 @@ def getAnalysis(csvPath,preset,saveImage=False,showImage=False):
                      'STO Slow : {}\n'.format(ps_sto_slow)
                  , size=10, ha='left', va='top', color=((.6, .6, .6)))
 
+        axes[1].text(100, df['%K'][0], '  ' + str(df['%K'][0].round(2)),
+                     size=10, ha='left', va='center', color=pltColor['text'])
+
+        axes[3].text(100, df['GL_Ratio'][0], '  ' + str(df['GL_Ratio'][0].round(2)),
+                     size=10, ha='left', va='center', color=pltColor['text'])
+
         axes[5].text(plotTrimMin + 1, df['Max_Drawdown%'][0],
                      'Max Drawdown : {}%\n'.format(df['Max_Drawdown%'][0]) +
                      'Avg Drawdown : {}%\n'.format(df['Avg_Drawdown%'][0])
                      , size=10, ha='left', va='top', color=((.6, .6, .6)))
+        axes[5].text(100, df['Drawdown%'][0], '  ' + str(df['Drawdown%'][0].round(2))+'%',
+                     size=10, ha='left', va='center',color=pltColor['text'])
 
         # Finally
         if saveImage:
@@ -432,7 +440,7 @@ def backTesting(quote,preset):
     #import csv from yahoofinance
     filePath = dataPath+'/backtesting_hist/'+quote+'.BK.csv'
     tmpFilePath = dataPath+'/backtesting_hist/'+quote+'.tmp'
-    df_hist = pd.read_csv(filePath).tail(500)
+    df_hist = pd.read_csv(filePath)
     df_bt = pd.DataFrame()
 
     for i in range(df_hist['Date'].count()):
@@ -587,20 +595,19 @@ def backTesting(quote,preset):
 
 
 if __name__ == '__main__' :
-    #getAnalysis(histPath + 'NER' + '.csv', 'S2',saveImage=False,showImage=True)
-    getSignalAllPreset()
+    #getAnalysis(histPath + 'TQM' + '.csv', 'S4',saveImage=False,showImage=True)
+    #getSignalAllPreset()
 
     """
-    for ps in presetJson:
-        #backTesting('TU',ps)
-        #backTesting('AMATA',ps)
-        #backTesting('TQM',ps)
-        #backTesting('GULF',ps)
-        #backTesting('CPALL',ps)
-        #backTesting('IVL',ps)
-        #backTesting('KBANK',ps)
-        backTesting('SAWAD',ps)
-        #backTesting('STA',ps)
+    import update
+    update.updatePreset()
+    presetPath = dataPath + '/preset.json'
+    presetJson = json.load(open(presetPath))
+    for f in os.listdir(dataPath + '/backtesting_hist/'):
+        if f.__contains__('.BK'):
+            q = f.split('.')[0]
+            for ps in presetJson:
+                backTesting(q,ps)
     """
     pass
 
