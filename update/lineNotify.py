@@ -70,7 +70,7 @@ def signalReportToUser(*_):
                         'Preset Name \"{}\" '.format(preset) +\
                         '\n' + text_buy + text_sell
             #print(msg_signal)
-            #sendNotifyMassage(token, msg_signal)
+            sendNotifyMassage(token, msg_signal)
 
             #Send Images
             for i in range(df[df['Preset'] == preset]['Preset'].count()):
@@ -87,7 +87,7 @@ def signalReportToUser(*_):
                 for i in range(timeOut):
                     try:
                         imgFile = '{}_{}.png'.format(preset,select['Quote'])
-                        #sendNotifyImageMsg(token, imgPath + imgFile, q_msg)
+                        sendNotifyImageMsg(token, imgPath + imgFile, q_msg)
                         break
                     except:
                         if i >= timeOut:
@@ -103,5 +103,5 @@ if __name__=='__main__':
     #update.updatePreset()
     #presetPath = dataPath + '/preset.json'
     #presetJson = json.load(open(presetPath))
-    #signalReportToUser()
+    signalReportToUser()
     pass
