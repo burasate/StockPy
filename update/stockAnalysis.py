@@ -5,6 +5,7 @@ import json
 import os
 import datetime as dt
 from shutil import copyfile
+import gSheet
 
 rootPath = os.path.dirname(os.path.abspath(__file__))
 dataPath = rootPath+'/data'
@@ -17,121 +18,6 @@ quotePath = dataPath + '/quote.json'
 quoteJson = json.load(open(quotePath))
 histFileList = os.listdir(histPath)
 analysisHistPath = dataPath + '/analysis_hist'
-
-"""
-def getAnalysisSetFromCSV(csvPath,valueFilter=100000000,priceMin=5,priceMax=150,SMA=10,breakOutH=55,breakOutL=20):
-    quote = os.path.splitext(os.path.basename(csvPath))[0]
-
-    # Read Data Frame
-    df = pd.read_csv(csvPath)
-
-    if df['Day'].count() < 50:
-        #print('skip {} because not enough data'.format(quote))
-        return None
-
-    flag = ''
-    date = dt.date.today().strftime('%d/%m/%Y')
-    price = df['Close'][0]
-    volume = df['Volume'][0]
-    true_range = df['High'] - df['Low']
-    avg_true_range = round(true_range.mean(), 2)
-    median = (max(df['High']) + min(df['Low'])) / 2
-    midian_range_pecentile = round(((df['Close'][0] - median) / df['Close'][0]) * 100)
-    value = df['Volume'][0] * df['Close'][0]
-    sma_s = round(df['Close'][0:SMA].mean(), 2)
-    sma_l = round(df['Close'].mean(), 2)
-    breakout_high = df['High'][0:breakOutH].max()
-    breakout_low = df['Low'][0:breakOutL].min()
-    breakout_mid = round((breakout_high + breakout_low) / 2, 2)
-    breakout_midLow = round((breakout_mid + (breakout_low * 2)) / 3, 2)
-    breakout_midHigh = round((breakout_mid + (breakout_high * 2)) / 3, 2)
-    change_day = round(((df['Close'][0] - df['Close'][1]) / df['Close'][0]) * 100, 2)
-    change_week = round(((df['Close'][0] - df['Close'][4]) / df['Close'][0]) * 100, 2)
-    change_month = round(((df['Close'][0] - df['Close'][19]) / df['Close'][0]) * 100, 2)
-    stop_loss = round(breakout_low - min(true_range), 2)
-    trailling_stop = round(((breakout_high - breakout_low) / breakout_high) * 50)
-    volume_high_week_change = df['Volume'][0:9].max() - df['Volume'][10:19].max()
-    value_high_week_change = volume_high_week_change * price
-    board_lot = price * 100
-
-
-    # Signal Condition
-    condition_filter = (
-            value > valueFilter and
-            price > priceMin and price < priceMax
-    )
-    condition_buy = (
-            sma_s > sma_l and
-            df['Close'][df['Close'].count() - 1] < median and
-            price > breakout_midLow  # and
-    )
-    condition_sell = (
-            sma_s < sma_l and
-            price < median and
-            df['Close'][df['Close'].count() - 1] > median  # and
-    )
-    if condition_buy and condition_filter:
-        flag = 'BUY'
-    elif condition_sell and condition_filter:
-        flag = 'SELL'
-    elif condition_filter and not condition_sell and not condition_buy:
-        flag = 'SIDE'
-
-    # Data Set
-    dataS = {
-        'DATE' : date,
-        'QUOTE' : quote,
-        'PRICE': price,
-        'CHG% D':change_day,
-        'CHG% W':change_week,
-        'CHG% M':change_month,
-        'MID RANGE %':midian_range_pecentile,
-        'ATR':avg_true_range,
-        'HIGH VOL W CHG':volume_high_week_change,
-        'HIGH VAL W CHG':value_high_week_change,
-        'BreakOut H':breakout_high,
-        'BreakOut MH':breakout_midHigh,
-        'BreakOut M':breakout_mid,
-        'BreakOut ML':breakout_midLow,
-        'BreakOut L':breakout_low,
-        'SMA1':sma_s,
-        'SMA2':sma_l,
-        'VOLUME':volume,
-        'VALUE':value,
-        'STOPLOSS':stop_loss,
-        'TRAILLING%':trailling_stop,
-        'BOARD LOT':board_lot,
-        'FLAG':flag
-    }
-
-    if not condition_filter:
-        return None
-
-    return dataS
-
-def getSignalFromPreset(presetName):
-    buy_signal_list = []
-    sell_signal_list = []
-    side_signal_list = []
-
-    # Scan from csv
-    for file in histFileList:
-        analysisData = getAnalysisSetFromCSV(histPath + file,presetJson[presetName]['value'],
-                                             presetJson[presetName]['priceMin'],
-                                             presetJson[presetName]['priceMax'],
-                                             presetJson[presetName]['SMA'],
-                                             presetJson[presetName]['breakOutH'],
-                                             presetJson[presetName]['breakOutL'])
-        if analysisData != None:
-            if analysisData['FLAG']=='BUY':
-                buy_signal_list.append(analysisData['QUOTE'])
-            elif analysisData['FLAG']=='SELL':
-                sell_signal_list.append(analysisData['QUOTE'])
-            else:
-                side_signal_list.append(analysisData['QUOTE'])
-    dataS = {'BUY':buy_signal_list,'SELL':sell_signal_list,'SIDE':side_signal_list}
-    return dataS
-"""
 
 def getAnalysis(csvPath,preset,saveImage=False,showImage=False):
     # Plot Indicator
@@ -435,6 +321,9 @@ def getSignalAllPreset(*_):
     new_signal_df = new_signal_df[new_signal_df['Rec_Date'] != rec_date]
     new_signal_df = new_signal_df.append(signal_df)
     new_signal_df.to_csv(csvPath,index=False)
+
+    # Update G Sheet
+    gSheet.updateFromCSV(csvPath, 'SignalRecord')
 
 def backTesting(quote,preset):
     #import csv from yahoofinance
