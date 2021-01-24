@@ -279,6 +279,18 @@ def getSignalAllPreset(*_):
                 df['Quote'] = quote
                 df['Rec_Date'] = rec_date
 
+                # Condition List
+                entry_condition_list = [df['SMA_S'][0] > df['SMA_L'][0],
+                                        df['%K'][0] > df['%D'][0],
+                                        df['%K'][0] < 80,
+                                        df['Volume_SMA_S'][0] > df['Volume_SMA_L'][0],
+                                        df['GL_Ratio'][0] > df['GL_Ratio_Avg'][0]
+                                        ]
+
+                exit_condition_list = [df['SMA_S'][0] < df['SMA_L'][0],
+                                       df['GL_Ratio'][0] < df['GL_Ratio_Avg'][0]
+                                       ]
+
                 # Condition Setting
                 filter_condition = (
                         df['Value_M'][0] >= presetJson[ps]["value"] / 1000000 and
@@ -286,16 +298,25 @@ def getSignalAllPreset(*_):
                         df['Close'][0] < presetJson[ps]["priceMax"]
                 )
                 entry_condition = (
-                        df['SMA_S'][0] > df['SMA_L'][0] and
-                        df['%K'][0] > df['%D'][0] and
-                        df['%K'][0] < 80 and
-                        df['Volume_SMA_S'][0] > df['Volume_SMA_L'][0] and
-                        df['GL_Ratio'][0] > df['GL_Ratio_Avg'][0]
+                        entry_condition_list[0] and
+                        entry_condition_list[1] and
+                        entry_condition_list[2] and
+                        entry_condition_list[3] and
+                        entry_condition_list[4]
                 )
                 exit_condition = (
-                        df['SMA_S'][0] < df['SMA_L'][0] and
-                        df['GL_Ratio'][0] < df['GL_Ratio_Avg'][0]
+                        exit_condition_list[0] and
+                        exit_condition_list[1]
                 )
+
+                # Buy Score
+                df['Buy_Score'] = 0
+                for con in entry_condition_list:
+                    if con:
+                        df['Buy_Score'] = df['Buy_Score']+1
+                for con in exit_condition_list:
+                    if con:
+                        df['Buy_Score'] = df['Buy_Score']-1
 
                 # Trade Entry
                 if filter_condition and entry_condition:
@@ -308,12 +329,13 @@ def getSignalAllPreset(*_):
                     print('Preset : {} | Exit : {}'.format(ps, file))
                     df['Signal'] = 'Exit'
                     signal_df = signal_df.append(df.iloc[0])
-                #elif filter_condition:
-                    #signal_df = signal_df.append(df.iloc[0])
+                elif filter_condition and df['Buy_Score'][0] >= 3:
+                    signal_df = signal_df.append(df.iloc[0])
+
             except:
                 pass
 
-    signal_df = signal_df.sort_values(['Signal','Preset','Value_M','GL_Ratio','ATR','Drawdown%'], ascending=[True,True,False,False,True,True])
+    signal_df = signal_df.sort_values(['Signal','Preset','Value_M','GL_Ratio','ATR','Drawdown%','Buy_Score'], ascending=[True,True,False,False,True,True,False])
     csvPath = dataPath + os.sep + 'signal.csv'
 
     # New Signal DataFrame
@@ -323,7 +345,10 @@ def getSignalAllPreset(*_):
     new_signal_df.to_csv(csvPath,index=False)
 
     # Update G Sheet
-    gSheet.updateFromCSV(csvPath, 'SignalRecord')
+    gsheet_df = signal_df.sort_values(['Buy_Score','Preset'],ascending=[False,True])
+    gsheet_csvPath = dataPath + os.sep + 'signal_gsheet.csv'
+    gsheet_df[['Rec_Date','Preset','Quote','Buy_Score']].to_csv(gsheet_csvPath,index=False)
+    gSheet.updateFromCSV(gsheet_csvPath, 'SignalRecord')
 
 def backTesting(quote,preset):
     #import csv from yahoofinance
@@ -485,7 +510,7 @@ def backTesting(quote,preset):
 
 if __name__ == '__main__' :
     #getAnalysis(histPath + 'TQM' + '.csv', 'S4',saveImage=False,showImage=True)
-    #getSignalAllPreset()
+    getSignalAllPreset()
 
     """
     import update
