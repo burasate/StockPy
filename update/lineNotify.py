@@ -58,17 +58,20 @@ def signalReportToUser(*_):
             df =  df[df['Preset']==preset]
             entry_list =  df[df['Signal']=='Entry']['Quote'].tolist()
             exit_list =  df[df['Signal']=='Exit']['Quote'].tolist()
+            good_signal_list = df[df['Signal']!='Entry']
+            good_signal_list = good_signal_list[good_signal_list['Signal']!='Exit']['Quote'].tolist()
             #print(entry_list)
             #print(exit_list)
+            #print(good_signal_list)
 
             # Message Text
-            text_buy = 'Trade Entry △ \n{}\n'.format(' '.join(entry_list))
-            #text_side = '◁ ▷ \n{}\n'.format(' '.join(signalS['SIDE']))
-            text_sell = 'Trade Exit ▽ \n{}\n'.format(' '.join(exit_list))
+            text_buy = 'Trade Entry △ \n   {}\n'.format(' '.join(entry_list))
+            good_signal_list = 'Good Signal △ \n   {}\n'.format(' '.join(good_signal_list))
+            text_sell = 'Trade Exit ▽ \n   {}\n'.format(' '.join(exit_list))
 
             msg_signal = date + '\n' +\
                         'Preset Name \"{}\" '.format(preset) +\
-                        '\n' + text_buy + text_sell
+                        '\n' + text_buy + good_signal_list + text_sell
             #print(msg_signal)
             sendNotifyMassage(token, msg_signal)
 
