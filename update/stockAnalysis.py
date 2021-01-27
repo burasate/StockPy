@@ -295,7 +295,8 @@ def getSignalAllPreset(*_):
                 filter_condition = (
                         df['Value_M'][0] >= presetJson[ps]["value"] / 1000000 and
                         df['Close'][0] > presetJson[ps]["priceMin"] and
-                        df['Close'][0] < presetJson[ps]["priceMax"]
+                        df['Close'][0] < presetJson[ps]["priceMax"] and
+                        df['Close'][0] > df['Close'].mean()
                 )
                 entry_condition = (
                         entry_condition_list[0] and
@@ -509,7 +510,7 @@ def backTesting(quote,preset):
 
 
 if __name__ == '__main__' :
-    #getAnalysis(histPath + 'TQM' + '.csv', 'S4',saveImage=False,showImage=True)
+    #getAnalysis(histPath + 'TISCO' + '.csv', 'S4',saveImage=False,showImage=True)
     getSignalAllPreset()
 
     """
