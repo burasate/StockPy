@@ -344,7 +344,7 @@ def getSignalAllPreset(*_):
     gsheet_df = signal_df.sort_values(['Buy_Score','Preset'],ascending=[False,True])
     gsheet_csvPath = dataPath + os.sep + 'signal_gsheet.csv'
     gsheet_df[['Rec_Date','Preset','Quote','Buy_Score']].to_csv(gsheet_csvPath,index=False)
-    #gSheet.updateFromCSV(gsheet_csvPath, 'SignalRecord')
+    gSheet.updateFromCSV(gsheet_csvPath, 'SignalRecord')
 
 def backTesting(quote,preset):
     #import csv from yahoofinance
@@ -506,7 +506,7 @@ if __name__ == '__main__' :
     #getAnalysis(histPath + 'KCE' + '.csv', 'S4',saveImage=False,showImage=True)
     getSignalAllPreset()
 
-    #"""
+    """
     import update
     update.updatePreset()
     presetPath = dataPath + '/preset.json'
@@ -516,7 +516,7 @@ if __name__ == '__main__' :
             q = f.split('.')[0]
             for ps in presetJson:
                 backTesting(q,ps)
-    #"""
+    """
     pass
 
 
