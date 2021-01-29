@@ -69,11 +69,10 @@ def getAnalysis(csvPath,preset,saveImage=False,showImage=False):
     d_slow = k_slow.rolling(ps_sto_slow).mean()
     df['%K'] = k_slow.sort_index(ascending=True).round(2)
     df['%D'] = d_slow.sort_index(ascending=True).round(2)
-    #print(df)
 
     # volume
     volume_sma_s = df_reverse['Volume'].rolling(2).mean()
-    volume_sma_l = volume_sma_s.rolling(10).mean()
+    volume_sma_l = volume_sma_s.rolling(20).mean()
     df['Volume_SMA_S'] = volume_sma_s.sort_index(ascending=True)
     df['Volume_SMA_L'] = volume_sma_l.sort_index(ascending=True)
 
@@ -99,7 +98,7 @@ def getAnalysis(csvPath,preset,saveImage=False,showImage=False):
     df['Loss'] = loss.sort_index(ascending=True).round(6)
     df['GL_Ratio'] = (gain.rolling(ps_breakout_low).mean()/loss.rolling(ps_breakout_low).mean()).round(2)
     df['GL_Ratio'] = df['GL_Ratio'].replace([np.inf, -np.inf], 0)
-    df['GL_Ratio_Avg'] = df['GL_Ratio'].sort_index(ascending=False).rolling(3).mean().sort_index(ascending=True)
+    df['GL_Ratio_Avg'] = df['GL_Ratio'].sort_index(ascending=False).rolling(5).mean().sort_index(ascending=True)
 
     # drawdown
     df['Drawdown%'] = 100 * ((df['BreakOut_H']-df['Low'])/df['BreakOut_H'])
@@ -193,9 +192,9 @@ def getAnalysis(csvPath,preset,saveImage=False,showImage=False):
         axes[1].plot([0,120], [20,20], linewidth=.7, color=pltColor['red'], linestyle='--')
 
         axes[2].bar(df['Day'], df['Volume'], linewidth=.5, color=(.5, .5, .5), linestyle=':',alpha=0.2)
-        axes[2].plot(df['Day'], df['Volume_SMA_S'], linewidth=1, color=(.5, .5, .5), linestyle='-')
-        axes[2].plot(df['Day'], df['Volume_SMA_L'], linewidth=.5, color=(.5, .5, .5), linestyle='-')
-        axes[2].plot(df['Day'][0], df['Volume_SMA_S'][0], color=(.5, .5, .5), linewidth=1, marker='o', markersize=7)
+        #axes[2].plot(df['Day'], df['Volume_SMA_S'], linewidth=1, color=(.5, .5, .5), linestyle='-')
+        #axes[2].plot(df['Day'], df['Volume_SMA_L'], linewidth=.5, color=(.5, .5, .5), linestyle='-')
+        #axes[2].plot(df['Day'][0], df['Volume_SMA_S'][0], color=(.5, .5, .5), linewidth=1, marker='o', markersize=7)
 
         axes[3].fill_between(df['Day'], df['GL_Ratio'], linewidth=1, color=(.5, .5, .5), linestyle='-',alpha=0.2)
         axes[3].plot(df['Day'], df['GL_Ratio'], linewidth=.7, color=(.5, .5, .5), linestyle='-')
@@ -282,8 +281,6 @@ def getSignalAllPreset(*_):
                 # Condition List
                 entry_condition_list = [df['SMA_S'][0] > df['SMA_L'][0],
                                         df['%K'][0] > df['%D'][0],
-                                        df['%K'][0] < 80,
-                                        df['Volume_SMA_S'][0] > df['Volume_SMA_L'][0],
                                         df['GL_Ratio'][0] > df['GL_Ratio_Avg'][0]
                                         ]
 
@@ -301,9 +298,7 @@ def getSignalAllPreset(*_):
                 entry_condition = (
                         entry_condition_list[0] and
                         entry_condition_list[1] and
-                        entry_condition_list[2] and
-                        entry_condition_list[3] and
-                        entry_condition_list[4]
+                        entry_condition_list[2]
                 )
                 exit_condition = (
                         exit_condition_list[0] and
@@ -330,7 +325,7 @@ def getSignalAllPreset(*_):
                     print('Preset : {} | Exit : {}'.format(ps, file))
                     df['Signal'] = 'Exit'
                     signal_df = signal_df.append(df.iloc[0])
-                elif filter_condition and df['Buy_Score'][0] >= 3:
+                elif filter_condition and df['Buy_Score'][0] >= df['Buy_Score'].max()-1:
                     signal_df = signal_df.append(df.iloc[0])
 
             except:
@@ -349,7 +344,7 @@ def getSignalAllPreset(*_):
     gsheet_df = signal_df.sort_values(['Buy_Score','Preset'],ascending=[False,True])
     gsheet_csvPath = dataPath + os.sep + 'signal_gsheet.csv'
     gsheet_df[['Rec_Date','Preset','Quote','Buy_Score']].to_csv(gsheet_csvPath,index=False)
-    gSheet.updateFromCSV(gsheet_csvPath, 'SignalRecord')
+    #gSheet.updateFromCSV(gsheet_csvPath, 'SignalRecord')
 
 def backTesting(quote,preset):
     #import csv from yahoofinance
@@ -383,8 +378,6 @@ def backTesting(quote,preset):
             entry_condition = (
                     df['SMA_S'][0] > df['SMA_L'][0] and
                     df['%K'][0] > df['%D'][0] and
-                    df['%K'][0] < 80 and
-                    #df['Volume_SMA_S'][0] > df['Volume_SMA_L'][0] and
                     df['GL_Ratio'][0] > df['GL_Ratio_Avg'][0]
             )
             exit_condition = (
@@ -510,10 +503,10 @@ def backTesting(quote,preset):
 
 
 if __name__ == '__main__' :
-    #getAnalysis(histPath + 'TISCO' + '.csv', 'S4',saveImage=False,showImage=True)
+    #getAnalysis(histPath + 'KCE' + '.csv', 'S4',saveImage=False,showImage=True)
     getSignalAllPreset()
 
-    """
+    #"""
     import update
     update.updatePreset()
     presetPath = dataPath + '/preset.json'
@@ -523,7 +516,7 @@ if __name__ == '__main__' :
             q = f.split('.')[0]
             for ps in presetJson:
                 backTesting(q,ps)
-    """
+    #"""
     pass
 
 
