@@ -71,7 +71,7 @@ def signalReportToUser(*_):
 
             msg_signal = date + '\n' +\
                         'Preset Name \"{}\" '.format(preset) +\
-                        '\n' + text_buy + good_signal_list + text_sell
+                        '\n' + text_buy + text_sell
             #print(msg_signal)
             sendNotifyMassage(token, msg_signal)
 
