@@ -113,7 +113,7 @@ def getAnalysis(csvPath,preset,saveImage=False,showImage=False):
             'red' : (0.8, 0.4, 0),
             'green' : (0.4, 0.8, 0),
             'blue' : (0, 0.7, 0.9),
-            'yellow' : (1, 0.8, 0)
+            'yellow' : (.9, .6, 0)
         }
         fig, axes = plt.subplots(nrows=6, ncols=1, figsize=(12, 9), dpi=100,
                                  sharex=True, sharey=False,
@@ -169,19 +169,20 @@ def getAnalysis(csvPath,preset,saveImage=False,showImage=False):
         axes[5].yaxis.tick_right()
 
         # Line Plot
-        axes[0].plot(df['Day'], df['BreakOut_H'], linewidth=.7, color=pltColor['green'], linestyle='--')
-        axes[0].plot(df['Day'], df['BreakOut_L'], linewidth=.7, color=pltColor['red'], linestyle='--')
-        axes[0].plot(df['Day'], df['BreakOut_M'], linewidth=.7, color=(0.7, 0.7, 0.7), linestyle='--')
-        axes[0].plot(df['Day'], df['BreakOut_MH'], linewidth=.7, color=(0.7, 0.7, 0.7), linestyle='--')
-        axes[0].plot(df['Day'], df['BreakOut_ML'], linewidth=.7, color=(0.7, 0.7, 0.7), linestyle='--')
+        axes[0].plot(df['Day'], df['BreakOut_H'], linewidth=1, color=pltColor['green'], linestyle=':')
+        axes[0].plot(df['Day'], df['BreakOut_L'], linewidth=1, color=pltColor['red'], linestyle=':')
+        axes[0].plot(df['Day'], df['BreakOut_M'], linewidth=1, color=pltColor['yellow'], linestyle=':')
+        #axes[0].plot(df['Day'], df['BreakOut_MH'], linewidth=.7, color=(0.7, 0.7, 0.7), linestyle='--')
+        #axes[0].plot(df['Day'], df['BreakOut_ML'], linewidth=.7, color=(0.7, 0.7, 0.7), linestyle='--')
 
-        axes[0].plot([0, 100], [df['BreakOut_H'][0], df['BreakOut_H'][0]], linewidth=.7, color=pltColor['green'], linestyle='-',alpha = 0.5)
-        axes[0].plot([0, 100], [df['BreakOut_L'][0], df['BreakOut_L'][0]], linewidth=.7, color=pltColor['red'], linestyle='-',alpha = 0.5)
+        axes[0].plot([0, 120], [df['BreakOut_H'][0], df['BreakOut_H'][0]], linewidth=1, color=pltColor['green'], linestyle='-',alpha = 1)
+        axes[0].plot([0, 120], [df['BreakOut_L'][0], df['BreakOut_L'][0]], linewidth=1, color=pltColor['red'], linestyle='-',alpha = 1)
+        axes[0].plot([0, 120], [df['BreakOut_M'][0], df['BreakOut_M'][0]], linewidth=1, color=pltColor['yellow'], linestyle='-',alpha = 1)
 
         axes[0].plot(df['Day'], clh, color=(.5,.5,.5), linewidth=1, marker='', markersize=1)
         axes[0].plot(df['Day'][0], clh[0], color=(.5,.5,.5), linewidth=1, marker='o', markersize=7)
-        axes[0].plot(df['Day'], h_plt, color=(0.25, 0.25, 0.25), linewidth=.2, linestyle=':', marker='', markersize=.5)
-        axes[0].plot(df['Day'], l_plt, color=(0.25, 0.25, 0.25), linewidth=.2, linestyle=':', marker='', markersize=.5)
+        axes[0].plot(df['Day'], h_plt, color=(0.25, 0.25, 0.25), linewidth=.4, linestyle=':', marker='', markersize=.5)
+        axes[0].plot(df['Day'], l_plt, color=(0.25, 0.25, 0.25), linewidth=.4, linestyle=':', marker='', markersize=.5)
         axes[0].plot(df['Day'], clh_np, linewidth=.5, color=(0.25, 0.25, 0.25), linestyle=':')
 
         axes[1].plot(df['Day'], df['%K'], linewidth=1, color=(.5, .5, .5), linestyle='-')
@@ -222,6 +223,8 @@ def getAnalysis(csvPath,preset,saveImage=False,showImage=False):
                  color=pltColor['text'])
         axes[0].text(100, df['BreakOut_H'][0], '  ' + str(df['BreakOut_H'][0]), size=10, ha='left', va='center',
                  color=pltColor['text'])
+        axes[0].text(100, df['BreakOut_M'][0], '  ' + str(df['BreakOut_M'][0]), size=10, ha='left', va='center',
+                     color=pltColor['text'])
         axes[0].text(plotTrimMin+1, df['High'].max(),
                      'Preset Name: {}\n'.format(preset)+
                      'Preset Description : {}\n'.format(ps_description)+
@@ -503,8 +506,8 @@ def backTesting(quote,preset):
 
 
 if __name__ == '__main__' :
-    #getAnalysis(histPath + 'KCE' + '.csv', 'S4',saveImage=False,showImage=True)
-    getSignalAllPreset()
+    getAnalysis(histPath + 'TQM' + '.csv', 'S3',saveImage=False,showImage=True)
+    #getSignalAllPreset()
 
     """
     import update
