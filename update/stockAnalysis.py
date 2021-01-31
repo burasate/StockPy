@@ -169,15 +169,15 @@ def getAnalysis(csvPath,preset,saveImage=False,showImage=False):
         axes[5].yaxis.tick_right()
 
         # Line Plot
-        axes[0].plot(df['Day'], df['BreakOut_H'], linewidth=1, color=pltColor['green'], linestyle=':')
-        axes[0].plot(df['Day'], df['BreakOut_L'], linewidth=1, color=pltColor['red'], linestyle=':')
-        axes[0].plot(df['Day'], df['BreakOut_M'], linewidth=1, color=pltColor['yellow'], linestyle=':')
+        axes[0].plot(df['Day'], df['BreakOut_H'], linewidth=1, color=pltColor['green'], linestyle='--')
+        axes[0].plot(df['Day'], df['BreakOut_L'], linewidth=1, color=pltColor['red'], linestyle='--')
+        axes[0].plot(df['Day'], df['BreakOut_M'], linewidth=1, color=pltColor['yellow'], linestyle='--')
         #axes[0].plot(df['Day'], df['BreakOut_MH'], linewidth=.7, color=(0.7, 0.7, 0.7), linestyle='--')
         #axes[0].plot(df['Day'], df['BreakOut_ML'], linewidth=.7, color=(0.7, 0.7, 0.7), linestyle='--')
 
-        axes[0].plot([0, 120], [df['BreakOut_H'][0], df['BreakOut_H'][0]], linewidth=1, color=pltColor['green'], linestyle='-',alpha = 1)
-        axes[0].plot([0, 120], [df['BreakOut_L'][0], df['BreakOut_L'][0]], linewidth=1, color=pltColor['red'], linestyle='-',alpha = 1)
-        axes[0].plot([0, 120], [df['BreakOut_M'][0], df['BreakOut_M'][0]], linewidth=1, color=pltColor['yellow'], linestyle='-',alpha = 1)
+        axes[0].plot([0, 120], [df['BreakOut_H'][0], df['BreakOut_H'][0]], linewidth=1, color=pltColor['green'], linestyle='-',alpha = .7)
+        axes[0].plot([0, 120], [df['BreakOut_L'][0], df['BreakOut_L'][0]], linewidth=1, color=pltColor['red'], linestyle='-',alpha = .7)
+        axes[0].plot([0, 120], [df['BreakOut_M'][0], df['BreakOut_M'][0]], linewidth=1, color=pltColor['yellow'], linestyle='-',alpha = .7)
 
         axes[0].plot(df['Day'], clh, color=(.5,.5,.5), linewidth=1, marker='', markersize=1)
         axes[0].plot(df['Day'][0], clh[0], color=(.5,.5,.5), linewidth=1, marker='o', markersize=7)
@@ -506,7 +506,7 @@ def backTesting(quote,preset):
 
 
 if __name__ == '__main__' :
-    getAnalysis(histPath + 'TQM' + '.csv', 'S3',saveImage=False,showImage=True)
+    getAnalysis(histPath + 'GULF' + '.csv', 'S4',saveImage=False,showImage=True)
     #getSignalAllPreset()
 
     """
