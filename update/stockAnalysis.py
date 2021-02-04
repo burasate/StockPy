@@ -345,7 +345,7 @@ def getSignalAllPreset(*_):
             except:
                 pass
 
-    signal_df = signal_df.sort_values(['Signal','Preset','Value_M','GL_Ratio''Buy_Score'], ascending=[True,True,False,False,False])
+    signal_df = signal_df.sort_values(['Signal','Preset','Value_M','GL_Ratio','Buy_Score'], ascending=[True,True,False,False,False])
     csvPath = dataPath + os.sep + 'signal.csv'
 
     # New Signal DataFrame
