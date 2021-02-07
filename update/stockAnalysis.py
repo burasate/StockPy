@@ -72,9 +72,12 @@ def getAnalysis(csvPath,preset,saveImage=False,showImage=False):
 
     # volume
     volume_sma_s = df_reverse['Volume'].rolling(2).mean()
+    volume_break_h = df_reverse['Volume'].rolling(3).max()
     volume_sma_l = volume_sma_s.rolling(20).mean()
     df['Volume_SMA_S'] = volume_sma_s.sort_index(ascending=True)
     df['Volume_SMA_L'] = volume_sma_l.sort_index(ascending=True)
+    df['Volume_Break_H'] = volume_break_h.sort_index(ascending=True)
+    df['Volume_Avg'] = df_reverse['Volume'].mean()
 
     # break out
     breakout_h = df_reverse['High'].rolling(ps_breakout_high).max()
@@ -175,8 +178,8 @@ def getAnalysis(csvPath,preset,saveImage=False,showImage=False):
         axes[0].plot(df['Day'], df['BreakOut_H'], linewidth=.7, color=pltColor['green'], linestyle='--')
         axes[0].plot(df['Day'], df['BreakOut_L'], linewidth=.7, color=pltColor['red'], linestyle='--')
         axes[0].plot(df['Day'], df['BreakOut_M'], linewidth=.7, color=pltColor['yellow'], linestyle='--')
-        axes[0].plot(df['Day'], df['BreakOut_MH'], linewidth=.7, color=(0.7, 0.7, 0.7), linestyle='--')
-        axes[0].plot(df['Day'], df['BreakOut_ML'], linewidth=.7, color=(0.7, 0.7, 0.7), linestyle='--')
+        #axes[0].plot(df['Day'], df['BreakOut_MH'], linewidth=.7, color=(0.7, 0.7, 0.7), linestyle='--')
+        #axes[0].plot(df['Day'], df['BreakOut_ML'], linewidth=.7, color=(0.7, 0.7, 0.7), linestyle='--')
 
         axes[0].plot([100, 120], [df['BreakOut_H'][0], df['BreakOut_H'][0]], linewidth=.7, color=pltColor['green'], linestyle='--',alpha = 1)
         axes[0].plot([100, 120], [df['BreakOut_L'][0], df['BreakOut_L'][0]], linewidth=.7, color=pltColor['red'], linestyle='--',alpha = 1)
@@ -199,10 +202,13 @@ def getAnalysis(csvPath,preset,saveImage=False,showImage=False):
         axes[2].bar(df[df['Close'] > df['Open']]['Day'], df[df['Close'] > df['Open']]['Volume'], linewidth=.5,
                     color=pltColor['green'], linestyle=':', alpha=.2)
         axes[2].bar(df[df['Close'] < df['Open']]['Day'], df[df['Close'] < df['Open']]['Volume'], linewidth=.5,
-                    color=(.5, .5, .5), linestyle=':', alpha=.2)
+                    color=pltColor['red'], linestyle=':', alpha=.2)
         #axes[2].plot(df['Day'], df['Volume_SMA_S'], linewidth=1, color=(.5, .5, .5), linestyle='-')
         #axes[2].plot(df['Day'], df['Volume_SMA_L'], linewidth=.5, color=(.5, .5, .5), linestyle='-')
-        #axes[2].plot(df['Day'][0], df['Volume_SMA_S'][0], color=(.5, .5, .5), linewidth=1, marker='o', markersize=7)
+        axes[2].plot(df['Day'], df['Volume_Break_H'], linewidth=1, color=(.5, .5, .5), linestyle='-')
+        axes[2].plot([0, 120], [df['Volume_Avg'][0],df['Volume_Avg'][0]], linewidth=.7, color=pltColor['red'],
+                     linestyle='--')
+        axes[2].plot(df['Day'][0], df['Volume_Break_H'][0], color=(.5, .5, .5), linewidth=1, marker='o', markersize=7)
 
         axes[3].fill_between(df['Day'], df['GL_Ratio'], linewidth=1, color=(.5, .5, .5), linestyle='-',alpha=0.2)
         axes[3].plot(df['Day'], df['GL_Ratio'], linewidth=.7, color=(.5, .5, .5), linestyle='-')
@@ -212,16 +218,17 @@ def getAnalysis(csvPath,preset,saveImage=False,showImage=False):
                      linestyle='--')
 
         axes[4].plot(df['Day'], df['SMA_S'], linewidth=1, color=(.5, .5, .5), linestyle='-')
-        axes[4].plot(df['Day'], df['SMA_L'], linewidth=1, color=(.5,.5,.5), linestyle='--')
+        axes[4].plot(df['Day'], df['SMA_L'], linewidth=.7, color=(.5,.5,.5), linestyle='--')
         axes[4].plot(df['Day'][0], df['SMA_S'][0], color=(.5, .5, .5), linewidth=1, marker='o', markersize=7)
+        axes[4].plot([0, 120], [df['Close'].mean(), df['Close'].mean()], linewidth=.7, color=pltColor['red'], linestyle='--')
 
         axes[5].fill_between(df['Day'],  df['Drawdown%'], linewidth=1, color=(.5, .5, .5), linestyle='-', alpha=0.2)
         axes[5].plot(df['Day'],  df['Drawdown%'], linewidth=.7, color=(.5, .5, .5), linestyle='-')
         axes[5].plot(df['Day'][0], df['Drawdown%'][0], color=(.5, .5, .5), linewidth=1, marker='o', markersize=7)
 
         axes[5].plot([0, 120], [df['Max_Drawdown%'][0], df['Max_Drawdown%'][0]], linewidth=.7, color=pltColor['red'], linestyle='--')
-        axes[5].plot([0, 120], [df['Avg_Drawdown%'][0], df['Avg_Drawdown%'][0]], linewidth=.7, color=pltColor['blue'], linestyle='--')
-        axes[5].plot([0, 120], [df['Min_Drawdown%'][0], df['Min_Drawdown%'][0]], linewidth=.7, color=pltColor['green'], linestyle='--')
+        axes[5].plot([0, 120], [df['Avg_Drawdown%'][0], df['Avg_Drawdown%'][0]], linewidth=.7, color=pltColor['yellow'], linestyle='--')
+        axes[5].plot([0, 120], [df['Min_Drawdown%'][0], df['Min_Drawdown%'][0]], linewidth=.7, color=pltColor['red'], linestyle='--')
 
         # Text Color By signal
         axes[0].text(100, min(df['Low']), quote + ' : ' + str(df['Close'][0]), size=40, ha='right', va='bottom',
@@ -392,7 +399,8 @@ def backTesting(quote,preset):
             entry_condition = (
                     df['SMA_S'][0] > df['SMA_L'][0] and
                     df['%K'][0] > df['%D'][0] and
-                    df['GL_Ratio'][0] > df['GL_Ratio_Slow'][0]
+                    df['GL_Ratio'][0] > df['GL_Ratio_Slow'][0] and
+                    df['Close'][0] > df['Close'].mean()
             )
             exit_condition = (
                     df['SMA_S'][0] < df['SMA_L'][0] and
@@ -517,7 +525,7 @@ def backTesting(quote,preset):
 
 
 if __name__ == '__main__' :
-    getAnalysis(histPath + 'J' + '.csv', 'S4',saveImage=False,showImage=True)
+    getAnalysis(histPath + 'HANA' + '.csv', 'S4',saveImage=False,showImage=True)
     #getSignalAllPreset()
 
     """
