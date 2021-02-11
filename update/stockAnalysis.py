@@ -72,7 +72,7 @@ def getAnalysis(csvPath,preset,saveImage=False,showImage=False):
 
     # volume
     volume_sma_s = df_reverse['Volume'].rolling(2).mean()
-    volume_break_h = df_reverse['Volume'].rolling(3).max()
+    volume_break_h = df_reverse['Volume'].rolling(2).max()
     volume_sma_l = volume_sma_s.rolling(20).mean()
     df['Volume_SMA_S'] = volume_sma_s.sort_index(ascending=True)
     df['Volume_SMA_L'] = volume_sma_l.sort_index(ascending=True)
@@ -184,7 +184,7 @@ def getAnalysis(csvPath,preset,saveImage=False,showImage=False):
         #Test Buy Signal
         axes[0].plot(df[df['SMA_S']>df['SMA_L']][df['%K']>df['%D']][df['GL_Ratio']>df['GL_Ratio_Slow']]['Day'],
                      df[df['SMA_S']>df['SMA_L']][df['%K']>df['%D']][df['GL_Ratio']>df['GL_Ratio_Slow']]['Low'],
-                     linewidth=0, color=pltColor['green'], linestyle='-', marker=6, markersize=7)
+                     linewidth=0, color=pltColor['green'], linestyle='-', marker='o', markersize=4)
 
         axes[0].plot([100, 120], [df['BreakOut_H'][0], df['BreakOut_H'][0]], linewidth=.7, color=pltColor['green'], linestyle='--',alpha = 1)
         axes[0].plot([100, 120], [df['BreakOut_L'][0], df['BreakOut_L'][0]], linewidth=.7, color=pltColor['red'], linestyle='--',alpha = 1)
@@ -530,7 +530,7 @@ def backTesting(quote,preset):
 
 
 if __name__ == '__main__' :
-    getAnalysis(histPath + 'KUN' + '.csv', 'S4',saveImage=False,showImage=True)
+    getAnalysis(histPath + 'KCE' + '.csv', 'S4',saveImage=False,showImage=True)
     #getSignalAllPreset()
 
     """
