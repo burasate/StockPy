@@ -82,12 +82,16 @@ def getAnalysis(csvPath,preset,saveImage=False,showImage=False):
     # break out
     breakout_h = df_reverse['High'].rolling(ps_breakout_high).max()
     breakout_l = df_reverse['Low'].rolling(ps_breakout_low).min()
+    breakout_ml = df_reverse['Low'].rolling(int(round(ps_breakout_low/2))).min()
+    breakout_mh = df_reverse['High'].rolling(int(round(ps_breakout_high/2))).max()
     df['BreakOut_L'] = breakout_l.sort_index(ascending=True)
     df['BreakOut_H'] = breakout_h.sort_index(ascending=True)
     df['BreakOut_M'] = (df['BreakOut_L']+df['BreakOut_H'])*0.5
     df['BreakOut_M'] = df['BreakOut_M'].round(2)
-    df['BreakOut_MH'] = (df['BreakOut_M']+df['BreakOut_H'])*0.5
-    df['BreakOut_ML'] = (df['BreakOut_L']+df['BreakOut_M'])*0.5
+    #df['BreakOut_MH'] = (df['BreakOut_M']+df['BreakOut_H'])*0.5
+    df['BreakOut_MH'] = breakout_mh.sort_index(ascending=True)
+    #df['BreakOut_ML'] = (df['BreakOut_L']+df['BreakOut_M'])*0.5
+    df['BreakOut_ML'] = breakout_ml.sort_index(ascending=True)
 
     # sma
     sma_s = df_reverse['Close'].rolling(ps_sma_s).mean()
@@ -178,13 +182,16 @@ def getAnalysis(csvPath,preset,saveImage=False,showImage=False):
         axes[0].plot(df['Day'], df['BreakOut_H'], linewidth=.7, color=pltColor['green'], linestyle='--')
         axes[0].plot(df['Day'], df['BreakOut_L'], linewidth=.7, color=pltColor['red'], linestyle='--')
         axes[0].plot(df['Day'], df['BreakOut_M'], linewidth=.7, color=pltColor['yellow'], linestyle='--')
-        #axes[0].plot(df['Day'], df['BreakOut_MH'], linewidth=.7, color=(0.7, 0.7, 0.7), linestyle='--')
-        #axes[0].plot(df['Day'], df['BreakOut_ML'], linewidth=.7, color=(0.7, 0.7, 0.7), linestyle='--')
+        axes[0].plot(df['Day'], df['BreakOut_MH'], linewidth=.7, color=pltColor['green'], linestyle='--',alpha=0.5)
+        axes[0].plot(df['Day'], df['BreakOut_ML'], linewidth=.7, color=pltColor['red'], linestyle='--',alpha=0.5)
 
-        #Test Buy Signal
+        #Test Signal
         axes[0].plot(df[df['SMA_S']>df['SMA_L']][df['%K']>df['%D']][df['GL_Ratio']>df['GL_Ratio_Slow']]['Day'],
                      df[df['SMA_S']>df['SMA_L']][df['%K']>df['%D']][df['GL_Ratio']>df['GL_Ratio_Slow']]['Low'],
                      linewidth=0, color=pltColor['green'], linestyle='-', marker='o', markersize=4)
+        axes[0].plot(df[df['SMA_S'] < df['SMA_L']][df['GL_Ratio'] < df['GL_Ratio_Slow']]['Day'],
+                     df[df['SMA_S'] < df['SMA_L']][df['GL_Ratio'] < df['GL_Ratio_Slow']]['High'],
+                     linewidth=0, color=pltColor['red'], linestyle='-', marker='o', markersize=4)
 
         axes[0].plot([100, 120], [df['BreakOut_H'][0], df['BreakOut_H'][0]], linewidth=.7, color=pltColor['green'], linestyle='--',alpha = 1)
         axes[0].plot([100, 120], [df['BreakOut_L'][0], df['BreakOut_L'][0]], linewidth=.7, color=pltColor['red'], linestyle='--',alpha = 1)
@@ -530,7 +537,7 @@ def backTesting(quote,preset):
 
 
 if __name__ == '__main__' :
-    getAnalysis(histPath + 'KCE' + '.csv', 'S4',saveImage=False,showImage=True)
+    getAnalysis(histPath + 'J' + '.csv', 'S4',saveImage=False,showImage=True)
     #getSignalAllPreset()
 
     """
