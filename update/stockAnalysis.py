@@ -100,13 +100,14 @@ def getAnalysis(csvPath,preset,saveImage=False,showImage=False):
     df['SMA_L'] = sma_l.sort_index(ascending=True).round(2)
 
     # gain / loss ratio
-    gain = (df_reverse['Close']/df_reverse['Low'].rolling(ps_breakout_low).min())-1
-    loss = 1-(df_reverse['Close']/df_reverse['High'].rolling(ps_breakout_low).max())
+    gl_rolling = 10
+    gain = (df_reverse['Close']/df_reverse['Low'].rolling(gl_rolling).min())-1
+    loss = 1-(df_reverse['Close']/df_reverse['High'].rolling(gl_rolling).max())
     df['Gain'] = gain.sort_index(ascending=True).round(6)
     df['Loss'] = loss.sort_index(ascending=True).round(6)
-    df['GL_Ratio'] = (gain.rolling(ps_breakout_low).mean()/loss.rolling(ps_breakout_low).mean()).round(2)
+    df['GL_Ratio'] = (gain.rolling(gl_rolling).mean()/loss.rolling(gl_rolling).mean()).round(2)
     df['GL_Ratio'] = df['GL_Ratio'].replace([np.inf, -np.inf], 0)
-    df['GL_Ratio_Slow'] = df['GL_Ratio'].sort_index(ascending=False).rolling(5).mean().sort_index(ascending=True)
+    df['GL_Ratio_Slow'] = df['GL_Ratio'].sort_index(ascending=False).rolling(3).mean().sort_index(ascending=True)
     df['GL_Ratio_Avg'] = df['GL_Ratio'].mean()
 
     # drawdown
@@ -142,36 +143,36 @@ def getAnalysis(csvPath,preset,saveImage=False,showImage=False):
         plotTrimMax = 105
         axes[0].set_facecolor(pltColor['bg'])
         axes[0].set_xlim(plotTrimMin,plotTrimMax)
-        axes[0].grid(True, 'both', 'both',color = (.87,.87,.87))
+        #axes[0].grid(True, 'both', 'both',color = (.87,.87,.87))
         axes[0].minorticks_on()
         axes[0].set_title('Price',color=pltColor['text'],pad=2,size=10,y=0)
         axes[0].yaxis.tick_right()
-        axes[1].grid(True, 'both', 'both', color=(.87, .87, .87))
+        #axes[1].grid(True, 'both', 'both', color=(.87, .87, .87))
         axes[1].minorticks_on()
         axes[1].set_facecolor(pltColor['bg'])
         axes[1].set_xlim(plotTrimMin, plotTrimMax)
         axes[1].set_ylim(0, 100)
         axes[1].set_title('Slow Stochastic',color=pltColor['text'],pad=2,size=10,y=0)
         axes[1].yaxis.tick_right()
-        axes[2].grid(True, 'both', 'both', color=(.87, .87, .87))
+        #axes[2].grid(True, 'both', 'both', color=(.87, .87, .87))
         axes[2].minorticks_on()
         axes[2].set_facecolor(pltColor['bg'])
         axes[2].set_xlim(plotTrimMin, plotTrimMax)
         axes[2].set_title('Volume', color=pltColor['text'],pad=2,size=10,y=0)
         axes[2].yaxis.tick_right()
-        axes[3].grid(True, 'both', 'both', color=(.87, .87, .87))
+        #axes[3].grid(True, 'both', 'both', color=(.87, .87, .87))
         axes[3].minorticks_on()
         axes[3].set_facecolor(pltColor['bg'])
         axes[3].set_xlim(plotTrimMin, plotTrimMax)
         axes[3].set_title('Gain/Loss Ratio', color=pltColor['text'],pad=2,size=10,y=0)
         axes[3].yaxis.tick_right()
-        axes[4].grid(True, 'both', 'both', color=(.87, .87, .87))
+        #axes[4].grid(True, 'both', 'both', color=(.87, .87, .87))
         axes[4].minorticks_on()
         axes[4].set_facecolor(pltColor['bg'])
         axes[4].set_xlim(plotTrimMin, plotTrimMax)
         axes[4].set_title('SMA', color=pltColor['text'],pad=2,size=10,y=0)
         axes[4].yaxis.tick_right()
-        axes[5].grid(True, 'both', 'both', color=(.87, .87, .87))
+        #axes[5].grid(True, 'both', 'both', color=(.87, .87, .87))
         axes[5].minorticks_on()
         axes[5].set_facecolor(pltColor['bg'])
         axes[5].set_xlim(plotTrimMin, plotTrimMax)
@@ -209,6 +210,7 @@ def getAnalysis(csvPath,preset,saveImage=False,showImage=False):
 
         axes[1].plot([0,120], [80,80], linewidth=.7, color=pltColor['green'], linestyle='--')
         axes[1].plot([0,120], [20,20], linewidth=.7, color=pltColor['red'], linestyle='--')
+        axes[1].plot([0,120], [50,50], linewidth=.7, color=(.5,.5,.5), linestyle='--')
 
         #axes[2].bar(df['Day'], df['Volume'], linewidth=.5, color=(.5, .5, .5), linestyle=':',alpha=0.1)
         axes[2].bar(df[df['Close'] >= df['Open']]['Day'], df[df['Close'] >= df['Open']]['Volume'], linewidth=.5,
@@ -226,7 +228,7 @@ def getAnalysis(csvPath,preset,saveImage=False,showImage=False):
         axes[3].plot(df['Day'], df['GL_Ratio'], linewidth=.7, color=(.5, .5, .5), linestyle='-')
         axes[3].plot(df['Day'], df['GL_Ratio_Slow'], linewidth=.7, color=(.5,.5,.5), linestyle=':')
         axes[3].plot(df['Day'][0], df['GL_Ratio'][0], color=(.5, .5, .5), linewidth=1, marker='o', markersize=7)
-        axes[3].plot([0, 120], [df['GL_Ratio_Avg'][0], df['GL_Ratio_Avg'][0]], linewidth=.7, color=pltColor['red'],
+        axes[3].plot([0, 120], [1, 1], linewidth=.7, color=pltColor['red'],
                      linestyle='--')
 
         axes[4].plot(df['Day'], df['SMA_S'], linewidth=1, color=(.5, .5, .5), linestyle='-')
@@ -537,7 +539,7 @@ def backTesting(quote,preset):
 
 
 if __name__ == '__main__' :
-    getAnalysis(histPath + 'J' + '.csv', 'S4',saveImage=False,showImage=True)
+    getAnalysis(histPath + 'JASIF' + '.csv', 'S4',saveImage=False,showImage=True)
     #getSignalAllPreset()
 
     """
