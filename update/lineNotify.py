@@ -58,22 +58,19 @@ def signalReportToUser(*_):
             df =  df[df['Preset']==preset]
             entry_list =  df[df['Signal']=='Entry']['Quote'].tolist()
             exit_list =  df[df['Signal']=='Exit']['Quote'].tolist()
-            good_signal_list = df[df['Signal']!='Entry']
-            good_signal_list = good_signal_list[good_signal_list['Signal']!='Exit']['Quote'].tolist()
             #print(entry_list)
             #print(exit_list)
-            #print(good_signal_list)
+
 
             # Message Text
             text_buy = 'Trade Entry △ \n   {}\n'.format(' '.join(entry_list))
-            good_signal_list = 'Good Signal △ \n   {}\n'.format(' '.join(good_signal_list))
             text_sell = 'Trade Exit ▽ \n   {}\n'.format(' '.join(exit_list))
 
             msg_signal = date + '\n' +\
                         'Preset Name \"{}\" '.format(preset) +\
                         '\n' + text_buy + text_sell
             #print(msg_signal)
-            sendNotifyMassage(token, msg_signal)
+            endNotifyMassage(token, msg_signal)
 
             #Send Images
             for i in range(df[df['Preset'] == preset]['Preset'].count()):
@@ -81,7 +78,9 @@ def signalReportToUser(*_):
                 q_msg = '▹ {} {}   \n'.format(select['Quote'], select['Close'])+\
                         'Month Chg {}% \n'.format(select['Chang_M%'])+\
                         'Break Out {}/{}\n'.format(select['BreakOut_L'],select['BreakOut_H'])+\
-                        'Trailing {}%-{}%\n'.format(select['Min_Drawdown%'].round(1),select['Avg_Drawdown%'].round(1))+ \
+                        'Trailing {}%,{}%,{}%\n'.format(select['Min_Drawdown%'].round(1),
+                                                        select['Avg_Drawdown%'].round(1),
+                                                        select['Max_Drawdown%'].round(1))+ \
                         'Value {} m'.format(select['Value_M'])
                 #print (q_msg)
 
