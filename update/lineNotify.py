@@ -70,7 +70,7 @@ def signalReportToUser(*_):
                         'Preset Name \"{}\" '.format(preset) +\
                         '\n' + text_buy + text_sell
             #print(msg_signal)
-            endNotifyMassage(token, msg_signal)
+            sendNotifyMassage(token, msg_signal)
 
             #Send Images
             for i in range(df[df['Preset'] == preset]['Preset'].count()):
