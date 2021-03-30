@@ -15,12 +15,12 @@ def LoadHist (Quote) :
 
     for i in range(2):
         try :
-            time.sleep(1)
-            requests.get(url,timeout=30)
-            time.sleep(1)
-            requests.get(url, timeout=30)
-            time.sleep(1)
-            r = requests.get(url,timeout=30)
+            time.sleep(0.25)
+            requests.get(url,timeout=5)
+            time.sleep(0.25)
+            requests.get(url, timeout=5)
+            time.sleep(0.25)
+            r = requests.get(url,timeout=5)
         except : print ('timed out')
         else : break
 
