@@ -1,9 +1,6 @@
-import json
-import csv
-import requests
+import json,time,csv,requests,os
 from datetime import datetime as dt
 from bs4 import BeautifulSoup
-import os
 import pandas as pd
 
 rootPath = os.path.dirname(os.path.abspath(__file__))
@@ -14,11 +11,15 @@ with open(dataPath+'/quote.json', 'r') as f:
 
 def LoadHist (Quote) :
     Historical_List = [['Day','Date','Open','High','Low','Close','adjClose','Volume']]
+    url = 'https://finance.yahoo.com/quote/' + Quote + '.BK/history?interval=1d&filter=history&frequency=1d'
 
     for i in range(2):
         try :
-            url = 'https://finance.yahoo.com/quote/'+Quote+'.BK/history?interval=1d&filter=history&frequency=1d'
+            time.sleep(1)
             requests.get(url,timeout=30)
+            time.sleep(1)
+            requests.get(url, timeout=30)
+            time.sleep(1)
             r = requests.get(url,timeout=30)
         except : print ('timed out')
         else : break
