@@ -4,6 +4,7 @@ import requests
 from datetime import datetime as dt
 from bs4 import BeautifulSoup
 import os
+import pandas as pd
 
 rootPath = os.path.dirname(os.path.abspath(__file__))
 dataPath = rootPath+'/data'
@@ -16,7 +17,9 @@ def LoadHist (Quote) :
 
     for i in range(2):
         try :
-            r = requests.get('https://finance.yahoo.com/quote/'+Quote+'.BK/history?interval=1d&filter=history&frequency=1d',timeout=30)
+            url = 'https://finance.yahoo.com/quote/'+Quote+'.BK/history?interval=1d&filter=history&frequency=1d'
+            requests.get(url,timeout=30)
+            r = requests.get(url,timeout=30)
         except : print ('timed out')
         else : break
 
@@ -42,8 +45,9 @@ def LoadHist (Quote) :
                     #print([Day,Date, Open, High, Low, Close, adjClose, Volume])
                     Historical_List.append([Day,Date, float(Open), float(High), float(Low), float(Close), float(adjClose), float(Volume)])
                     index += 1
-                if index == 1:
-                    print(Close)
+                if index < 3:
+                    print([Day,Date, Open, High, Low, Close, adjClose, Volume])
+                    pass
             except : pass
 
     if len(Historical_List) > 1 :
@@ -146,4 +150,5 @@ def LoadAllHist():
 if __name__ == '__main__' :
     #LoadAllHist()
     #LoadSetHist()
+    LoadHist('AH')
     pass

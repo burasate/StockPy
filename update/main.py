@@ -11,16 +11,13 @@ while True:
     except:
         pass
 
-
 import stockHistorical
 stockHistorical.LoadSetHist()
 stockHistorical.LoadAllHist()
 
-
 import stockAnalysis
-#stockAnalysis.getImageBuySignalAll()
+stockAnalysis.getImageBuySignalAll()
 stockAnalysis.getSignalAllPreset()
-
 
 import lineNotify
 lineNotify.signalReportToUser()
