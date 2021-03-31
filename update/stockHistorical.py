@@ -15,11 +15,6 @@ def LoadHist (Quote) :
 
     for i in range(2):
         try :
-            time.sleep(0.25)
-            requests.get(url,timeout=30)
-            time.sleep(0.25)
-            requests.get(url, timeout=30)
-            time.sleep(1)
             r = requests.get(url,timeout=30)
         except : print ('timed out')
         else : break
@@ -48,6 +43,7 @@ def LoadHist (Quote) :
                     index += 1
                 if index < 3:
                     print([Day,Date, Open, High, Low, Close, adjClose, Volume])
+                    #print(len(Volume))
                     pass
             except : pass
 
