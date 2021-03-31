@@ -11,11 +11,12 @@ with open(dataPath+'/quote.json', 'r') as f:
 
 def LoadHist (Quote) :
     Historical_List = [['Day','Date','Open','High','Low','Close','adjClose','Volume']]
-    url = 'https://finance.yahoo.com/quote/' + Quote + '.BK/history?interval=1d&filter=history&frequency=1d'
+    #url = 'https://finance.yahoo.com/quote/' + Quote + '.BK/history?interval=1d&filter=history&frequency=1d'
+    url = 'https://finance.yahoo.com/quote/' + Quote + '.BK/history'
 
-    for i in range(2):
+    for i in range(5):
         try :
-            r = requests.get(url,timeout=30)
+            r = requests.get(url,timeout=15)
         except : print ('timed out')
         else : break
 
