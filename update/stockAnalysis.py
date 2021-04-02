@@ -189,10 +189,10 @@ def getAnalysis(csvPath,preset,saveImage=False,showImage=False):
         #Test Signal
         axes[0].plot(df[df['SMA_S']>df['SMA_L']][df['%K']>df['%D']][df['GL_Ratio']>df['GL_Ratio_Slow']]['Day'],
                      df[df['SMA_S']>df['SMA_L']][df['%K']>df['%D']][df['GL_Ratio']>df['GL_Ratio_Slow']]['Low'],
-                     linewidth=0, color=pltColor['green'], linestyle='-', marker='o', markersize=4)
+                     linewidth=0, color=pltColor['green'], linestyle='-', marker='^', markersize=4)
         axes[0].plot(df[df['SMA_S'] < df['SMA_L']][df['GL_Ratio'] < df['GL_Ratio_Slow']]['Day'],
                      df[df['SMA_S'] < df['SMA_L']][df['GL_Ratio'] < df['GL_Ratio_Slow']]['High'],
-                     linewidth=0, color=pltColor['red'], linestyle='-', marker='o', markersize=4)
+                     linewidth=0, color=pltColor['red'], linestyle='-', marker='v', markersize=4)
 
         axes[0].plot([100, 120], [df['BreakOut_H'][0], df['BreakOut_H'][0]], linewidth=.7, color=pltColor['green'], linestyle='--',alpha = 1)
         axes[0].plot([100, 120], [df['BreakOut_L'][0], df['BreakOut_L'][0]], linewidth=.7, color=pltColor['red'], linestyle='--',alpha = 1)
@@ -539,7 +539,7 @@ def backTesting(quote,preset):
 
 
 if __name__ == '__main__' :
-    getAnalysis(histPath + 'JASIF' + '.csv', 'S4',saveImage=False,showImage=True)
+    getAnalysis(histPath + 'AH' + '.csv', 'S4',saveImage=False,showImage=True)
     #getSignalAllPreset()
 
     """
