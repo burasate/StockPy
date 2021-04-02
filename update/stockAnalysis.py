@@ -349,6 +349,7 @@ def getSignalAllPreset(*_):
                     if con:
                         df['Buy_Score'] = df['Buy_Score']-1
 
+                os.system('cls||clear')
                 # Trade Entry
                 if filter_condition and entry_condition:
                     print('Preset : {} | Entry : {}'.format(ps,file))

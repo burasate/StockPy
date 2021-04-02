@@ -158,6 +158,7 @@ def LoadAllHist():
     for Char in alphabets:
         for i in quote_list:
             if i[0] == Char :
+                os.system('cls||clear')
                 print('{}/{}   {}'.format(count,len(quote_list),i))
                 try:
                     LoadHist(i)
@@ -168,7 +169,7 @@ def LoadAllHist():
                     fail_c += 1
                 count += 1
     finish_time = dt.now()
-    os.system('cls')
+    os.system('cls||clear')
 
     log_text = 'Data Loading Start {}\n' \
                'Data Loading Finish {}\n' \
