@@ -144,6 +144,12 @@ def LoadSetHist() :
             outfile.close()
 
 def LoadAllHist():
+    # Clear Directory
+    imgPath = dataPath + '/hist/'
+    oldHistory = os.listdir(imgPath)
+    for f in oldHistory:
+        os.remove(imgPath + f)
+
     start_time = dt.now()
     alphabets = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
     count = 1
