@@ -9,6 +9,39 @@ dataPath = rootPath+'/data'
 with open(dataPath+'/quote.json', 'r') as f:
     quote_list = json.load(f)
 
+def LoadHist (Quote,connectCount = 5):
+    df = pd.DataFrame()
+    url = 'https://www.settrade.com/C04_02_stock_historical_p1.jsp?txtSymbol={}&ssoPageId=10&&selectPage=2&max=101&offset=0'.format(Quote)
+    #url = 'https://finance.yahoo.com/quote/' + Quote + '.BK/history'
+    for i in range(connectCount):
+        try :
+            r = requests.get(url,timeout=30)
+        except : print ('timed out')
+        else : break
+    c = r.content
+    soup = BeautifulSoup(c, 'html.parser')
+    price_data = soup.find_all('tbody')
+    index = 0
+    #print(price_data[0].find_all('tr'))
+    for row in price_data[0].find_all('tr'):
+        col = row.find_all('td')
+
+        df = df.append(pd.DataFrame({
+            'Day' : [100 - index],
+            'Date' : [col[0].get_text()],
+            'Open' : [col[1].get_text()],
+            'High' : [col[2].get_text()],
+            'Low' : [col[3].get_text()],
+            'Close' : [col[5].get_text()],
+            'adjClose' : [col[5].get_text()],
+            'Volume' : [float(str(col[8].get_text()).replace(',', ''))*1000]
+        }))
+        index += 1
+    df.reset_index(inplace=True,drop=True)
+    print(df[['Date','Close','Volume']].iloc[0])
+    df.to_csv(dataPath+'/hist/'+Quote+'.csv',index=False)
+
+"""
 def LoadHist (Quote) :
     Historical_List = [['Day','Date','Open','High','Low','Close','adjClose','Volume']]
     #url = 'https://finance.yahoo.com/quote/' + Quote + '.BK/history?interval=1d&filter=history&frequency=1d'
@@ -57,6 +90,7 @@ def LoadHist (Quote) :
             with open(dataPath+'/hist/'+Quote+'.csv', 'w', newline='') as outfile:
                 writer = csv.writer(outfile, delimiter=',')
                 writer.writerows(Historical_List)
+"""
 
 def LoadSetHist() :
     today = dt.today().strftime('%Y-%m-%d')
@@ -117,6 +151,7 @@ def LoadAllHist():
     fail_c = 0
     for Char in alphabets:
         for i in quote_list:
+            os.system('cls')
             if i[0] == Char :
                 print('{}/{}   {}'.format(count,len(quote_list),i))
                 try:
@@ -148,5 +183,5 @@ def LoadAllHist():
 if __name__ == '__main__' :
     #LoadAllHist()
     #LoadSetHist()
-    LoadHist('AH')
+    #LoadHist('AH')
     pass
