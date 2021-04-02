@@ -151,7 +151,6 @@ def LoadAllHist():
     fail_c = 0
     for Char in alphabets:
         for i in quote_list:
-            os.system('cls')
             if i[0] == Char :
                 print('{}/{}   {}'.format(count,len(quote_list),i))
                 try:
