@@ -134,12 +134,12 @@ def getAnalysis(csvPath,preset,saveImage=False,showImage=False):
         fig.patch.set_alpha(1)
         fig.suptitle(quoteJson[quote]["Name"].upper() + '\n' +
                   quoteJson[quote]["Market"] + ' - ' + quoteJson[quote]["Sector"]+
-                     '\n'+date,
+                     '\n'+df['Date'][0],
                   fontsize=15, color=pltColor['text'])
         plt.subplots_adjust(left=0.01, bottom=0.05, right=0.97, top=0.90, wspace=0.20, hspace=0.00)
 
         #Plot Setup
-        plotTrimMin = 20
+        plotTrimMin = 0
         plotTrimMax = 105
         axes[0].set_facecolor(pltColor['bg'])
         axes[0].set_xlim(plotTrimMin,plotTrimMax)
