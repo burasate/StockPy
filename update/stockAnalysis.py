@@ -304,9 +304,11 @@ def getSignalAllPreset(*_):
     for f in oldImgFiles:
         os.remove(imgPath + f)
 
+    count = 0
     for file in histFileList:
         quote = file.split('.')[0]
-        print(quote)
+        count += 1
+        print('{}/{}  {}'.format(count,len(histFileList),quote))
         for ps in presetJson:
             try:
                 df = getAnalysis(histPath+os.sep+file, ps,saveImage=False,showImage=False)
