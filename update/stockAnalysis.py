@@ -379,14 +379,14 @@ def getSignalAllPreset(*_):
     new_signal_df = pd.read_csv(csvPath)
     new_signal_df = new_signal_df[new_signal_df['Rec_Date'] != rec_date]
     new_signal_df = new_signal_df.append(signal_df)
-    new_signal_df.drop_duplicates(subset=['Date','Quote'], keep='first', inplace=True, ignore_index=False)
     new_signal_df.to_csv(csvPath,index=False)
 
     # Update G Sheet
     #gsheet_df = signal_df.sort_values(['Buy_Score','Preset'],ascending=[False,True])
     #gsheet_csvPath = dataPath + os.sep + 'signal_gsheet.csv'
     #gsheet_df[['Rec_Date','Preset','Quote','Buy_Score']].to_csv(gsheet_csvPath,index=False)
-    #gsheet_df.to_csv(gsheet_csvPath,index=False)
+    gsheet_df = new_signal_df.drop_duplicates(subset=['Date', 'Quote', 'Preset'], keep='first', inplace=False, ignore_index=False)
+    gsheet_df.to_csv(gsheet_csvPath, index=False)
     gSheet.updateFromCSV(csvPath, 'SignalRecord')
 
 def backTesting(quote,preset):
