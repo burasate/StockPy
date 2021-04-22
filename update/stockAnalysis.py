@@ -383,7 +383,7 @@ def getSignalAllPreset(*_):
 
     # Update G Sheet
     #gsheet_df = signal_df.sort_values(['Buy_Score','Preset'],ascending=[False,True])
-    #gsheet_csvPath = dataPath + os.sep + 'signal_gsheet.csv'
+    gsheet_csvPath = dataPath + os.sep + 'signal_gsheet.csv'
     #gsheet_df[['Rec_Date','Preset','Quote','Buy_Score']].to_csv(gsheet_csvPath,index=False)
     gsheet_df = new_signal_df.drop_duplicates(subset=['Date', 'Quote', 'Preset'], keep='first', inplace=False, ignore_index=False)
     gsheet_df.to_csv(gsheet_csvPath, index=False)
