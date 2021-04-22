@@ -387,7 +387,7 @@ def getSignalAllPreset(*_):
     #gsheet_df[['Rec_Date','Preset','Quote','Buy_Score']].to_csv(gsheet_csvPath,index=False)
     gsheet_df = new_signal_df.drop_duplicates(subset=['Date', 'Quote', 'Preset'], keep='first', inplace=False, ignore_index=False)
     gsheet_df.to_csv(gsheet_csvPath, index=False)
-    gSheet.updateFromCSV(csvPath, 'SignalRecord')
+    gSheet.updateFromCSV(gsheet_csvPath, 'SignalRecord')
 
 def backTesting(quote,preset):
     #import csv from yahoofinance
