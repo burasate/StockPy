@@ -34,6 +34,7 @@ def getAnalysis(csvPath,preset,saveImage=False,showImage=False):
     ps_breakout_low = presetJson[preset]["breakOutL"]
     ps_sto_fast = presetJson[preset]["stoFast"]
     ps_sto_slow = presetJson[preset]["stoSlow"]
+    ps_gain_loss = presetJson[preset]["gainLost"]
 
     # Read Data Frame
     df = pd.read_csv(csvPath)
@@ -100,7 +101,7 @@ def getAnalysis(csvPath,preset,saveImage=False,showImage=False):
     df['SMA_L'] = sma_l.sort_index(ascending=True).round(2)
 
     # gain / loss ratio
-    gl_rolling = 10
+    gl_rolling = ps_gain_loss
     gain = (df_reverse['Close']/df_reverse['Low'].rolling(gl_rolling).min())-1
     loss = 1-(df_reverse['Close']/df_reverse['High'].rolling(gl_rolling).max())
     df['Gain'] = gain.sort_index(ascending=True).round(6)
@@ -126,7 +127,7 @@ def getAnalysis(csvPath,preset,saveImage=False,showImage=False):
             'blue' : (0, 0.7, 0.9),
             'yellow' : (.9, .6, 0)
         }
-        fig, axes = plt.subplots(nrows=6, ncols=1, figsize=(12, 9), dpi=100,
+        fig, axes = plt.subplots(nrows=6, ncols=1, figsize=(8, 13), dpi=100,
                                  sharex=True, sharey=False,
                                 gridspec_kw={'height_ratios': [1.5,.5,.5,.5,.5,.5]})
         fig.patch.set_facecolor((.9, .9, .9))
@@ -136,11 +137,11 @@ def getAnalysis(csvPath,preset,saveImage=False,showImage=False):
                   quoteJson[quote]["Market"] + ' - ' + quoteJson[quote]["Sector"]+
                      '\n'+df['Date'][0],
                   fontsize=15, color=pltColor['text'])
-        plt.subplots_adjust(left=0.01, bottom=0.05, right=0.97, top=0.90, wspace=0.20, hspace=0.00)
+        plt.subplots_adjust(left=0.01, bottom=0.05, right=0.95, top=0.90, wspace=0.20, hspace=0.00)
 
         #Plot Setup
-        plotTrimMin = 0
-        plotTrimMax = 105
+        plotTrimMin = 20
+        plotTrimMax = 107
         axes[0].set_facecolor(pltColor['bg'])
         axes[0].set_xlim(plotTrimMin,plotTrimMax)
         #axes[0].grid(True, 'both', 'both',color = (.87,.87,.87))
@@ -305,7 +306,7 @@ def getSignalAllPreset(*_):
 
     for file in histFileList:
         quote = file.split('.')[0]
-        #print(quote)
+        print(quote)
         for ps in presetJson:
             try:
                 df = getAnalysis(histPath+os.sep+file, ps,saveImage=False,showImage=False)
@@ -314,9 +315,10 @@ def getSignalAllPreset(*_):
                 df['Rec_Date'] = rec_date
 
                 # Condition List
-                entry_condition_list = [df['SMA_S'][0] > df['SMA_L'][0],
-                                        df['%K'][0] > df['%D'][0],
-                                        df['GL_Ratio'][0] > df['GL_Ratio_Slow'][0]
+                entry_condition_list = [df['SMA_S'][0] > df['SMA_L'][0], #0
+                                        df['%K'][0] > df['%D'][0], #1
+                                        df['GL_Ratio'][0] > df['GL_Ratio_Slow'][0], #2
+                                        df['Volume_Break_H'][0] > df['Volume_Avg'][0] #3
                                         ]
 
                 exit_condition_list = [df['SMA_S'][0] < df['SMA_L'][0],
@@ -333,7 +335,8 @@ def getSignalAllPreset(*_):
                 entry_condition = (
                         entry_condition_list[0] and
                         entry_condition_list[1] and
-                        entry_condition_list[2]
+                        entry_condition_list[2] and
+                        entry_condition_list[3]
                 )
                 exit_condition = (
                         exit_condition_list[0] and
@@ -374,14 +377,15 @@ def getSignalAllPreset(*_):
     new_signal_df = pd.read_csv(csvPath)
     new_signal_df = new_signal_df[new_signal_df['Rec_Date'] != rec_date]
     new_signal_df = new_signal_df.append(signal_df)
+    new_signal_df.drop_duplicates(subset=['Date','Quote'], keep='first', inplace=True, ignore_index=False)
     new_signal_df.to_csv(csvPath,index=False)
 
     # Update G Sheet
-    gsheet_df = signal_df.sort_values(['Buy_Score','Preset'],ascending=[False,True])
-    gsheet_csvPath = dataPath + os.sep + 'signal_gsheet.csv'
+    #gsheet_df = signal_df.sort_values(['Buy_Score','Preset'],ascending=[False,True])
+    #gsheet_csvPath = dataPath + os.sep + 'signal_gsheet.csv'
     #gsheet_df[['Rec_Date','Preset','Quote','Buy_Score']].to_csv(gsheet_csvPath,index=False)
-    gsheet_df.to_csv(csvPath,index=False)
-    gSheet.updateFromCSV(gsheet_csvPath, 'SignalRecord')
+    #gsheet_df.to_csv(gsheet_csvPath,index=False)
+    gSheet.updateFromCSV(csvPath, 'SignalRecord')
 
 def backTesting(quote,preset):
     #import csv from yahoofinance
@@ -541,14 +545,16 @@ def backTesting(quote,preset):
 
 
 if __name__ == '__main__' :
-    getAnalysis(histPath + 'AH' + '.csv', 'S4',saveImage=False,showImage=True)
-    #getSignalAllPreset()
-
-    """
     import update
     update.updatePreset()
     presetPath = dataPath + '/preset.json'
     presetJson = json.load(open(presetPath))
+
+    #getAnalysis(histPath + 'BWG' + '.csv', 'S6',saveImage=False,showImage=True)
+    getSignalAllPreset()
+
+    """
+    # Backtesting...
     for f in os.listdir(dataPath + '/backtesting_hist/'):
         if f.__contains__('.BK'):
             q = f.split('.')[0]
