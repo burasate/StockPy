@@ -78,7 +78,7 @@ def signalReportToUser(*_):
                 q_msg = '▹ {} {}   \n'.format(select['Quote'], select['Close'])+\
                         'Month Chg {}% \n'.format(select['Chang_M%'])+\
                         'Break Out {}/{}\n'.format(select['BreakOut_L'],select['BreakOut_H'])+\
-                        'Trailing {}% - {}%\n'.format(select['Max_Drawdown%'].round(1) - select['Drawdown%'].round(1),
+                        'Trailing {}% - {}%\n'.format(select['Avg_Drawdown%'].round(1),
                                                         select['Max_Drawdown%'].round(1))+ \
                         'Value {} m'.format(select['Value_M'])
                 #print (q_msg)
