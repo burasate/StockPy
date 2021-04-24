@@ -51,6 +51,7 @@ def getAnalysis(csvPath,preset,saveImage=False,showImage=False):
     df['TrueRange'] = df['High'] - df['Low'] #true range
     avg_true_range = round(df['TrueRange'].mean(), 2)
     df['ATR'] = avg_true_range.round(2)
+    df['ATR%'] = round((avg_true_range/df['Close'].mean())*100,2)
     df['Value_M'] = ((df['Volume']/1000000)*df['Close']).round(2)
     day_n = 1
     week_n = 5
@@ -552,8 +553,8 @@ if __name__ == '__main__' :
     presetPath = dataPath + '/preset.json'
     presetJson = json.load(open(presetPath))
 
-    #getAnalysis(histPath + 'BWG' + '.csv', 'S6',saveImage=False,showImage=True)
-    getSignalAllPreset()
+    getAnalysis(histPath + 'BWG' + '.csv', 'S4',saveImage=False,showImage=True)
+    #getSignalAllPreset()
 
     """
     # Backtesting...
