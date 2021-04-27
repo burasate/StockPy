@@ -189,5 +189,5 @@ def LoadAllHist():
 if __name__ == '__main__' :
     #LoadAllHist()
     #LoadSetHist()
-    #LoadHist('AH')
+    LoadHist('WGE')
     pass

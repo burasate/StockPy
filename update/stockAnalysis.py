@@ -117,6 +117,8 @@ def getAnalysis(csvPath,preset,saveImage=False,showImage=False):
     df['Max_Drawdown%'] =  round(df['Drawdown%'].max(),2)
     df['Avg_Drawdown%'] =  round(df['Drawdown%'].mean(),2)
     df['Min_Drawdown%'] =  round(df['Drawdown%'].min(),2)
+    df['NDay_Drawdown%'] = (df['Drawdown%'].sort_index(ascending=False)).rolling(ps_breakout_high).max()
+    df['NDay_Drawdown%'] = df['NDay_Drawdown%'].sort_index(ascending=True).round(1)
 
     if saveImage or showImage:
         # Plot Figure
@@ -128,7 +130,7 @@ def getAnalysis(csvPath,preset,saveImage=False,showImage=False):
             'blue' : (0, 0.7, 0.9),
             'yellow' : (.9, .6, 0)
         }
-        fig, axes = plt.subplots(nrows=6, ncols=1, figsize=(8, 13), dpi=100,
+        fig, axes = plt.subplots(nrows=6, ncols=1, figsize=(11, 11), dpi=100,
                                  sharex=True, sharey=False,
                                 gridspec_kw={'height_ratios': [1.5,.5,.5,.5,.5,.5]})
         fig.patch.set_facecolor((.9, .9, .9))
@@ -138,7 +140,7 @@ def getAnalysis(csvPath,preset,saveImage=False,showImage=False):
                   quoteJson[quote]["Market"] + ' - ' + quoteJson[quote]["Sector"]+
                      '\n'+df['Date'][0],
                   fontsize=15, color=pltColor['text'])
-        plt.subplots_adjust(left=0.01, bottom=0.05, right=0.95, top=0.90, wspace=0.20, hspace=0.00)
+        plt.subplots_adjust(left=0.05, bottom=0.05, right=0.95, top=0.90, wspace=0.20, hspace=0.00)
 
         #Plot Setup
         plotTrimMin = 20
@@ -201,13 +203,13 @@ def getAnalysis(csvPath,preset,saveImage=False,showImage=False):
         axes[0].plot([100, 120], [df['BreakOut_M'][0], df['BreakOut_M'][0]], linewidth=.7, color=pltColor['yellow'], linestyle='--',alpha = 1)
 
         axes[0].plot(df['Day'], clh, color=(.5,.5,.5), linewidth=1, marker='', markersize=1)
-        axes[0].plot(df['Day'][0], clh[0], color=(.5,.5,.5), linewidth=1, marker='o', markersize=7)
+        axes[0].plot(df['Day'][0], clh[0], color=(.5,.5,.5), linewidth=1, marker='o', markersize=5)
         axes[0].plot(df['Day'], h_plt, color=(0.25, 0.25, 0.25), linewidth=.4, linestyle=':', marker='', markersize=.5)
         axes[0].plot(df['Day'], l_plt, color=(0.25, 0.25, 0.25), linewidth=.4, linestyle=':', marker='', markersize=.5)
         axes[0].plot(df['Day'], clh_np, linewidth=.5, color=(0.25, 0.25, 0.25), linestyle=':')
 
         axes[1].plot(df['Day'], df['%K'], linewidth=1, color=(.5, .5, .5), linestyle='-')
-        axes[1].plot(df['Day'][0], df['%K'][0], color=(.5, .5, .5), linewidth=1, marker='o', markersize=7)
+        axes[1].plot(df['Day'][0], df['%K'][0], color=(.5, .5, .5), linewidth=1, marker='o', markersize=5)
         axes[1].plot(df['Day'], df['%D'], linewidth=.7, color=(.5,.5,.5), linestyle=':')
 
         axes[1].plot([0,120], [80,80], linewidth=.7, color=pltColor['green'], linestyle='--')
@@ -224,27 +226,29 @@ def getAnalysis(csvPath,preset,saveImage=False,showImage=False):
         axes[2].plot(df['Day'], df['Volume_Break_H'], linewidth=1, color=(.5, .5, .5), linestyle='-')
         axes[2].plot([0, 120], [df['Volume_Avg'][0],df['Volume_Avg'][0]], linewidth=.7, color=pltColor['red'],
                      linestyle='--')
-        axes[2].plot(df['Day'][0], df['Volume_Break_H'][0], color=(.5, .5, .5), linewidth=1, marker='o', markersize=7)
+        axes[2].plot(df['Day'][0], df['Volume_Break_H'][0], color=(.5, .5, .5), linewidth=1, marker='o', markersize=5)
 
         axes[3].fill_between(df['Day'], df['GL_Ratio'], linewidth=1, color=(.5, .5, .5), linestyle='-',alpha=0.2)
         axes[3].plot(df['Day'], df['GL_Ratio'], linewidth=.7, color=(.5, .5, .5), linestyle='-')
         axes[3].plot(df['Day'], df['GL_Ratio_Slow'], linewidth=.7, color=(.5,.5,.5), linestyle=':')
-        axes[3].plot(df['Day'][0], df['GL_Ratio'][0], color=(.5, .5, .5), linewidth=1, marker='o', markersize=7)
+        axes[3].plot(df['Day'][0], df['GL_Ratio'][0], color=(.5, .5, .5), linewidth=1, marker='o', markersize=5)
         axes[3].plot([0, 120], [1, 1], linewidth=.7, color=pltColor['red'],
                      linestyle='--')
 
+        axes[4].fill_between(df['Day'], y1=df['SMA_S'], y2=df['SMA_L'], where=df['SMA_S']>=df['SMA_L'], linewidth=1, color=pltColor['green'], linestyle='-', alpha=0.2)
         axes[4].plot(df['Day'], df['SMA_S'], linewidth=1, color=(.5, .5, .5), linestyle='-')
         axes[4].plot(df['Day'], df['SMA_L'], linewidth=.7, color=(.5,.5,.5), linestyle=':')
-        axes[4].plot(df['Day'][0], df['SMA_S'][0], color=(.5, .5, .5), linewidth=1, marker='o', markersize=7)
+        axes[4].plot(df['Day'][0], df['SMA_S'][0], color=(.5, .5, .5), linewidth=1, marker='o', markersize=5)
         axes[4].plot([0, 120], [df['Close'].mean(), df['Close'].mean()], linewidth=.7, color=pltColor['red'], linestyle='--')
 
         axes[5].fill_between(df['Day'],  df['Drawdown%'], linewidth=1, color=(.5, .5, .5), linestyle='-', alpha=0.2)
+        axes[5].plot(df['Day'],  df['NDay_Drawdown%'], linewidth=.7, color=pltColor['red'], linestyle='--')
         axes[5].plot(df['Day'],  df['Drawdown%'], linewidth=.7, color=(.5, .5, .5), linestyle='-')
-        axes[5].plot(df['Day'][0], df['Drawdown%'][0], color=(.5, .5, .5), linewidth=1, marker='o', markersize=7)
+        axes[5].plot(df['Day'][0], df['NDay_Drawdown%'][0], color=pltColor['red'], linewidth=1, marker='o', markersize=5)
 
         axes[5].plot([0, 120], [df['Max_Drawdown%'][0], df['Max_Drawdown%'][0]], linewidth=.7, color=pltColor['red'], linestyle='--')
-        axes[5].plot([0, 120], [df['Avg_Drawdown%'][0], df['Avg_Drawdown%'][0]], linewidth=.7, color=pltColor['yellow'], linestyle='--')
-        axes[5].plot([0, 120], [df['Min_Drawdown%'][0], df['Min_Drawdown%'][0]], linewidth=.7, color=pltColor['red'], linestyle='--')
+        #axes[5].plot([0, 120], [df['Avg_Drawdown%'][0], df['Avg_Drawdown%'][0]], linewidth=.7, color=pltColor['yellow'], linestyle='--')
+        #axes[5].plot([0, 120], [df['Min_Drawdown%'][0], df['Min_Drawdown%'][0]], linewidth=.7, color=pltColor['red'], linestyle='--')
 
         # Text Color By signal
         axes[0].text(100, min(df['Low']), quote + ' : ' + str(df['Close'][0]), size=40, ha='right', va='bottom',
@@ -279,9 +283,10 @@ def getAnalysis(csvPath,preset,saveImage=False,showImage=False):
         axes[5].text(plotTrimMin + 1, df['Max_Drawdown%'][0],
                      'Max Drawdown : {}%\n'.format(df['Max_Drawdown%'][0]) +
                      'Avg Drawdown : {}%\n'.format(df['Avg_Drawdown%'][0]) +
-                     'Min Drawdown : {}%\n'.format(df['Min_Drawdown%'][0])
+                     'Min Drawdown : {}%\n'.format(df['Min_Drawdown%'][0]) +
+                     'N Day Drawdown : {}%\n'.format(df['NDay_Drawdown%'][0])
                      , size=10, ha='left', va='top', color=((.6, .6, .6)))
-        axes[5].text(100, df['Drawdown%'][0], '  ' + str(df['Drawdown%'][0].round(2))+'%',
+        axes[5].text(100, df['NDay_Drawdown%'][0], '  ' + str(df['NDay_Drawdown%'][0].round(1))+'%',
                      size=10, ha='left', va='center',color=pltColor['text'])
 
         # Finally
@@ -386,7 +391,7 @@ def getSignalAllPreset(*_):
     #gsheet_df = signal_df.sort_values(['Buy_Score','Preset'],ascending=[False,True])
     gsheet_csvPath = dataPath + os.sep + 'signal_gsheet.csv'
     #gsheet_df[['Rec_Date','Preset','Quote','Buy_Score']].to_csv(gsheet_csvPath,index=False)
-    gsheet_df = new_signal_df.drop_duplicates(subset=['Date', 'Quote', 'Preset'], keep='first', inplace=False, ignore_index=False)
+    gsheet_df = new_signal_df.drop_duplicates(subset=['Date', 'Quote', 'Preset'], keep='last', inplace=False, ignore_index=False)
     gsheet_df.to_csv(gsheet_csvPath, index=False)
     gSheet.updateFromCSV(gsheet_csvPath, 'SignalRecord')
 
@@ -548,12 +553,12 @@ def backTesting(quote,preset):
 
 
 if __name__ == '__main__' :
-    import update
-    update.updatePreset()
-    presetPath = dataPath + '/preset.json'
-    presetJson = json.load(open(presetPath))
+    #import update
+    #update.updatePreset()
+    #presetPath = dataPath + '/preset.json'
+    #presetJson = json.load(open(presetPath))
 
-    getAnalysis(histPath + 'BWG' + '.csv', 'S4',saveImage=False,showImage=True)
+    getAnalysis(histPath + 'WGE' + '.csv', 'S4',saveImage=False,showImage=True)
     #getSignalAllPreset()
 
     """
