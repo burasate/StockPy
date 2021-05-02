@@ -51,7 +51,8 @@ def getAnalysis(csvPath,preset,saveImage=False,showImage=False):
     df['TrueRange'] = df['High'] - df['Low'] #true range
     avg_true_range = round(df['TrueRange'].mean(), 2)
     df['ATR'] = avg_true_range.round(2)
-    df['ATR%'] = round((avg_true_range/df['Close'].mean())*100,2)
+    tr_percentage = 100 * ((df['High'] - df['Low']) / df['High'])
+    df['ATR%'] = tr_percentage.mean().round(2)
     df['Value_M'] = ((df['Volume']/1000000)*df['Close']).round(2)
     day_n = 1
     week_n = 5
@@ -117,14 +118,17 @@ def getAnalysis(csvPath,preset,saveImage=False,showImage=False):
     df['Max_Drawdown%'] =  round(df['Drawdown%'].max(),2)
     df['Avg_Drawdown%'] =  round(df['Drawdown%'].mean(),2)
     df['Min_Drawdown%'] =  round(df['Drawdown%'].min(),2)
-    df['NDay_Drawdown%'] = (df['Drawdown%'].sort_index(ascending=False)).rolling(ps_breakout_high).max()
+    if ps_breakout_high > 30 :
+        df['NDay_Drawdown%'] = (df['Drawdown%'].sort_index(ascending=False)).rolling(30).max()
+    else:
+        df['NDay_Drawdown%'] = (df['Drawdown%'].sort_index(ascending=False)).rolling(ps_breakout_high).max()
     df['NDay_Drawdown%'] = df['NDay_Drawdown%'].sort_index(ascending=True).round(1)
 
     if saveImage or showImage:
         # Plot Figure
         pltColor = {
             'bg' : (.9, .9, .9),
-            'text' : (.4, .4, .4),
+            'text' : (.6, .6, .6),
             'red' : (0.8, 0.4, 0),
             'green' : (0.4, 0.8, 0),
             'blue' : (0, 0.7, 0.9),
@@ -187,8 +191,8 @@ def getAnalysis(csvPath,preset,saveImage=False,showImage=False):
         axes[0].plot(df['Day'], df['BreakOut_H'], linewidth=.7, color=pltColor['green'], linestyle='--')
         axes[0].plot(df['Day'], df['BreakOut_L'], linewidth=.7, color=pltColor['red'], linestyle='--')
         axes[0].plot(df['Day'], df['BreakOut_M'], linewidth=.7, color=pltColor['yellow'], linestyle='--')
-        axes[0].plot(df['Day'], df['BreakOut_MH'], linewidth=.7, color=pltColor['green'], linestyle='--',alpha=0.5)
-        axes[0].plot(df['Day'], df['BreakOut_ML'], linewidth=.7, color=pltColor['red'], linestyle='--',alpha=0.5)
+        #axes[0].plot(df['Day'], df['BreakOut_MH'], linewidth=.7, color=pltColor['green'], linestyle='--',alpha=0.5)
+        #axes[0].plot(df['Day'], df['BreakOut_ML'], linewidth=.7, color=pltColor['red'], linestyle='--',alpha=0.5)
 
         #Test Signal
         axes[0].plot(df[df['SMA_S']>df['SMA_L']][df['%K']>df['%D']][df['GL_Ratio']>df['GL_Ratio_Slow']]['Day'],
@@ -241,6 +245,7 @@ def getAnalysis(csvPath,preset,saveImage=False,showImage=False):
         axes[4].plot(df['Day'][0], df['SMA_S'][0], color=(.5, .5, .5), linewidth=1, marker='o', markersize=5)
         axes[4].plot([0, 120], [df['Close'].mean(), df['Close'].mean()], linewidth=.7, color=pltColor['red'], linestyle='--')
 
+        axes[5].fill_between(df['Day'],  tr_percentage, linewidth=0, color=(.5, .5, .5), linestyle='-', alpha=0.2)
         axes[5].fill_between(df['Day'],  df['Drawdown%'], linewidth=1, color=(.5, .5, .5), linestyle='-', alpha=0.2)
         axes[5].plot(df['Day'],  df['NDay_Drawdown%'], linewidth=.7, color=pltColor['red'], linestyle='--')
         axes[5].plot(df['Day'],  df['Drawdown%'], linewidth=.7, color=(.5, .5, .5), linestyle='-')
@@ -558,7 +563,7 @@ if __name__ == '__main__' :
     #presetPath = dataPath + '/preset.json'
     #presetJson = json.load(open(presetPath))
 
-    getAnalysis(histPath + 'WGE' + '.csv', 'S4',saveImage=False,showImage=True)
+    getAnalysis(histPath + 'KCE' + '.csv', 'S3',saveImage=False,showImage=True)
     #getSignalAllPreset()
 
     """
