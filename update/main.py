@@ -1,15 +1,17 @@
 import time
+print('StockPy')
 time.sleep(120)
 
-import update
-while True:
-    try:
-        update.updateConfig()
-        update.updatePreset()
-        update.updateAllFile()
-        break
-    except:
-        pass
+if not os.name == 'nt':
+    import update
+    while True:
+        try:
+            update.updateConfig()
+            update.updatePreset()
+            update.updateAllFile()
+            break
+        except:
+            pass
 
 import stockHistorical
 stockHistorical.LoadSetHist()
