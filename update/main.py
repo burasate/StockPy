@@ -1,6 +1,6 @@
-import time
+import time,os
 print('StockPy')
-time.sleep(120)
+time.sleep(30)
 
 if not os.name == 'nt':
     import update
