@@ -411,6 +411,7 @@ def getSignalAllPreset(*_):
     new_signal_df = pd.read_csv(csvPath)
     new_signal_df = new_signal_df[new_signal_df['Rec_Date'] != rec_date]
     new_signal_df = new_signal_df.append(signal_df)
+    new_signal_df = new_signal_df.tail(6000)
     new_signal_df.to_csv(csvPath,index=False)
 
     # Update G Sheet
