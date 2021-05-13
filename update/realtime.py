@@ -18,11 +18,9 @@ def GetRealtime (Quote,connectCount = 5):
     for i in range(connectCount):
         try :
             r = requests.get(url,timeout=30)
-        except : print ('timed out')
+        except :
+            print ('timed out')
         else : break
-    if r.status_code != 200:
-        print(r.status_code)
-        return None
     c = r.content
     soup = BeautifulSoup(c, 'html.parser')
     table = soup.find_all('tbody')
@@ -110,11 +108,27 @@ def GetAllRealtime (*_):
     gSheet.updateFromCSV(dataPath+'/realtime.csv', 'Realtime')
 
 
-if os.name == 'nt':
+if os.name == 'nt': #Windows
     while True:
         try:
             GetAllRealtime()
             #time.sleep(60*5)
+        except: pass
+
+else: #Raspi
+    import update
+    while True:
+        try:
+            update.updateConfig()
+            update.updatePreset()
+            update.updateAllFile()
+            break
+        except:
+            pass
+    while True:
+        try:
+            GetAllRealtime()
+            time.sleep(60*5)
         except: pass
 
 if __name__ == '__main__' :
