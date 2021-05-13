@@ -128,7 +128,7 @@ else: #Raspi
     while True:
         try:
             GetAllRealtime()
-            time.sleep(60*5)
+            time.sleep(60*1)
         except: pass
 
 if __name__ == '__main__' :
