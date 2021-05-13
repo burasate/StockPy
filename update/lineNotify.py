@@ -53,7 +53,10 @@ def signalReportToUser(*_):
 
             # Load Signal Data
             df = pd.read_csv(dataPath + os.sep + 'signal.csv')
-            df = df[df['Rec_Date'] == df['Rec_Date'].max()]
+            last_date = df['Rec_Date'].tail(1).tolist()[0]
+            df = df[df['Rec_Date'] == last_date]
+            #df = df[df['Rec_Date'] == df['Rec_Date'].max()]
+            print(df)
 
             df =  df[df['Preset']==preset]
             entry_list =  df[df['Signal']=='Entry']['Quote'].tolist()
@@ -83,18 +86,21 @@ def signalReportToUser(*_):
                         'Value {} m'.format(select['Value_M'])
                 #print (q_msg)
 
-                # try send image with timeout checking
-                timeOut = 10
-                for i in range(timeOut):
-                    try:
-                        imgFile = '{}_{}.png'.format(preset,select['Quote'])
-                        sendNotifyImageMsg(token, imgPath + imgFile, q_msg)
-                        break
-                    except:
-                        if i >= timeOut:
+                if bool(configJson[user]['image']):
+                    # try send image with timeout checking
+                    timeOut = 10
+                    for i in range(timeOut):
+                        try:
+                            imgFile = '{}_{}.png'.format(preset,select['Quote'])
+                            sendNotifyImageMsg(token, imgPath + imgFile, q_msg)
                             break
-                        else:
-                            pass
+                        except:
+                            if i >= timeOut:
+                                break
+                            else:
+                                pass
+                else:
+                    sendNotifyMassage(token, q_msg)
 
 
 if __name__=='__main__':
@@ -104,5 +110,5 @@ if __name__=='__main__':
     #update.updatePreset()
     #presetPath = dataPath + '/preset.json'
     #presetJson = json.load(open(presetPath))
-    signalReportToUser()
+    #signalReportToUser()
     pass

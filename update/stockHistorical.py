@@ -41,57 +41,6 @@ def LoadHist (Quote,connectCount = 5):
     print(df[['Date','Close','Volume']].iloc[0])
     df.to_csv(dataPath+'/hist/'+Quote+'.csv',index=False)
 
-"""
-def LoadHist (Quote) :
-    Historical_List = [['Day','Date','Open','High','Low','Close','adjClose','Volume']]
-    #url = 'https://finance.yahoo.com/quote/' + Quote + '.BK/history?interval=1d&filter=history&frequency=1d'
-    url = 'https://finance.yahoo.com/quote/' + Quote + '.BK/history'
-
-    for i in range(5):
-        try :
-            r = requests.get(url,timeout=15)
-        except : print ('timed out')
-        else : break
-
-    c = r.content
-    soup = BeautifulSoup(c, 'html.parser')
-
-    price_data = soup.find_all('tbody')
-    index = 0
-    for table in price_data:
-        for row in table:
-            col = row.find_all('td')
-            #print(col)
-            try:
-                Day = 100 - index
-                Date = col[0].text
-                Open = col[1].text
-                High = col[2].text
-                Low = col[3].text
-                Close = col[4].text
-                adjClose = col[5].text
-                Volume = str(col[6].text).replace(',','')
-                if Volume != '-':
-                    #print([Day,Date, Open, High, Low, Close, adjClose, Volume])
-                    Historical_List.append([Day,Date, float(Open), float(High), float(Low), float(Close), float(adjClose), float(Volume)])
-                    index += 1
-                if index < 3:
-                    print([Day,Date, Open, High, Low, Close, adjClose, Volume])
-                    #print(len(Volume))
-                    pass
-            except : pass
-
-    if len(Historical_List) > 1 :
-        try:
-            with open(dataPath+'/hist/'+Quote+'.csv', 'x',newline='') as outfile:
-                writer = csv.writer(outfile, delimiter=',')
-                writer.writerows(Historical_List)
-        except:
-            with open(dataPath+'/hist/'+Quote+'.csv', 'w', newline='') as outfile:
-                writer = csv.writer(outfile, delimiter=',')
-                writer.writerows(Historical_List)
-"""
-
 def LoadSetHist() :
     today = dt.today().strftime('%Y-%m-%d')
     r = requests.get('https://marketdata.set.or.th/mkt/marketsummary.do?language=en&country=US')
@@ -189,5 +138,5 @@ def LoadAllHist():
 if __name__ == '__main__' :
     #LoadAllHist()
     #LoadSetHist()
-    LoadHist('UNIQ')
+    #LoadHist('UNIQ')
     pass

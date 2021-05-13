@@ -79,16 +79,16 @@ def getAnalysis(csvPath,preset,saveImage=False,showImage=False):
     # break out
     breakout_h = df_reverse['High'].rolling(ps_breakout_high).max()
     breakout_l = df_reverse['Low'].rolling(ps_breakout_low).min()
-    breakout_ml = df_reverse['Low'].rolling(int(round(ps_breakout_low/2))).min()
-    breakout_mh = df_reverse['High'].rolling(int(round(ps_breakout_high/2))).max()
+    #breakout_ml = df_reverse['Low'].rolling(int(round(ps_breakout_low/2))).min()
+    #breakout_mh = df_reverse['High'].rolling(int(round(ps_breakout_high/2))).max()
     df['BreakOut_L'] = breakout_l.sort_index(ascending=True)
     df['BreakOut_H'] = breakout_h.sort_index(ascending=True)
     df['BreakOut_M'] = (df['BreakOut_L']+df['BreakOut_H'])*0.5
     df['BreakOut_M'] = df['BreakOut_M'].round(2)
-    #df['BreakOut_MH'] = (df['BreakOut_M']+df['BreakOut_H'])*0.5
-    df['BreakOut_MH'] = breakout_mh.sort_index(ascending=True)
-    #df['BreakOut_ML'] = (df['BreakOut_L']+df['BreakOut_M'])*0.5
-    df['BreakOut_ML'] = breakout_ml.sort_index(ascending=True)
+    df['BreakOut_MH'] = (df['BreakOut_M']+df['BreakOut_H'])*0.5
+    #df['BreakOut_MH'] = breakout_mh.sort_index(ascending=True)
+    df['BreakOut_ML'] = (df['BreakOut_L']+df['BreakOut_M'])*0.5
+    #df['BreakOut_ML'] = breakout_ml.sort_index(ascending=True)
 
     # sma
     sma_s = df_reverse['Close'].rolling(ps_sma_s).mean()
@@ -126,10 +126,11 @@ def getAnalysis(csvPath,preset,saveImage=False,showImage=False):
     # df['TrueRange'] = df['High'] - df['Low'] #true range
     # avg_true_range = round(df['TrueRange'].mean(), 2)
     # df['ATR'] = avg_true_range.round(2)
-    # df['ATR%'] = tr_percentage.mean().round(2)
     tr_percentage = 100 * ((df['High'] - df['Low']) / df['High'])
     df['NDay_TrueRange%'] = (tr_percentage.sort_index(ascending=False)).rolling(ps_breakout_low).max()
     df['NDay_TrueRange%'] = df['NDay_TrueRange%'].sort_index(ascending=True).round(1)
+    df['ATR%'] = df['NDay_TrueRange%'].sort_index(ascending=False).rolling(ps_breakout_high).mean()
+    df['ATR%'] = df['ATR%'].sort_index(ascending=True).round(1)
 
     if saveImage or showImage:
         # Plot Figure
@@ -197,18 +198,9 @@ def getAnalysis(csvPath,preset,saveImage=False,showImage=False):
         # Line Plot
         axes[0].plot(df['Day'], df['BreakOut_H'], linewidth=.7, color=pltColor['green'], linestyle='-')
         axes[0].plot(df['Day'], df['BreakOut_L'], linewidth=.7, color=pltColor['red'], linestyle='-')
-        axes[0].plot(df['Day'], df['BreakOut_M'], linewidth=.7, color=pltColor['yellow'], linestyle=':')
-        #axes[0].plot(df['Day'], df['BreakOut_MH'], linewidth=.7, color=pltColor['green'], linestyle='--',alpha=0.5)
-        #axes[0].plot(df['Day'], df['BreakOut_ML'], linewidth=.7, color=pltColor['red'], linestyle='--',alpha=0.5)
-
-
-        #Test Signal
-        axes[0].plot(df[df['SMA_S']>df['SMA_L']][df['%K']>df['%D']][df['GL_Ratio']>df['GL_Ratio_Slow']]['Day'],
-                     df[df['SMA_S']>df['SMA_L']][df['%K']>df['%D']][df['GL_Ratio']>df['GL_Ratio_Slow']]['Low'],
-                     linewidth=0, color=pltColor['green'], linestyle='-', marker='^', markersize=4)
-        axes[0].plot(df[df['SMA_S'] < df['SMA_L']][df['GL_Ratio'] < df['GL_Ratio_Slow']]['Day'],
-                     df[df['SMA_S'] < df['SMA_L']][df['GL_Ratio'] < df['GL_Ratio_Slow']]['High'],
-                     linewidth=0, color=pltColor['red'], linestyle='-', marker='v', markersize=4)
+        #axes[0].plot(df['Day'], df['BreakOut_M'], linewidth=.7, color=pltColor['yellow'], linestyle=':')
+        axes[0].plot(df['Day'], df['BreakOut_MH'], linewidth=.7, color=pltColor['green'], linestyle='--',alpha=0.5)
+        axes[0].plot(df['Day'], df['BreakOut_ML'], linewidth=.7, color=pltColor['red'], linestyle='--',alpha=0.5)
 
         #axes[0].plot([100, 120], [df['BreakOut_H'][0], df['BreakOut_H'][0]], linewidth=.7, color=pltColor['green'], linestyle='-',alpha = 1)
         #axes[0].plot([100, 120], [df['BreakOut_L'][0], df['BreakOut_L'][0]], linewidth=.7, color=pltColor['red'], linestyle='-',alpha = 1)
@@ -219,6 +211,14 @@ def getAnalysis(csvPath,preset,saveImage=False,showImage=False):
         axes[0].plot(df['Day'], h_plt, color=(0.25, 0.25, 0.25), linewidth=.4, linestyle=':', marker='', markersize=.5)
         axes[0].plot(df['Day'], l_plt, color=(0.25, 0.25, 0.25), linewidth=.4, linestyle=':', marker='', markersize=.5)
         axes[0].plot(df['Day'], clh_np, linewidth=.5, color=(0.25, 0.25, 0.25), linestyle=':')
+
+        # Test Signal
+        axes[0].plot(df[df['SMA_S'] > df['SMA_L']][df['%K'] > df['%D']][df['GL_Ratio'] > df['GL_Ratio_Slow']]['Day'],
+                     df[df['SMA_S'] > df['SMA_L']][df['%K'] > df['%D']][df['GL_Ratio'] > df['GL_Ratio_Slow']]['Close'],
+                     linewidth=0, color=pltColor['green'], linestyle='-', marker='o', markersize=4)
+        axes[0].plot(df[df['SMA_S'] < df['SMA_L']][df['GL_Ratio'] < df['GL_Ratio_Slow']]['Day'],
+                     df[df['SMA_S'] < df['SMA_L']][df['GL_Ratio'] < df['GL_Ratio_Slow']]['Close'],
+                     linewidth=0, color=pltColor['red'], linestyle='-', marker='o', markersize=4)
 
         axes[5].fill_between(df['Day'], y1=df['%K'], y2=df['%D'],
                              where=df['%K'] >= df['%D'], linewidth=1, color=(.5, .5, .5),
@@ -267,7 +267,7 @@ def getAnalysis(csvPath,preset,saveImage=False,showImage=False):
                      markersize=4)
         axes[1].plot([0, 100], [df['Max_Drawdown%'][0], df['Max_Drawdown%'][0]], linewidth=.7, color=pltColor['red'],
                      linestyle='-')
-        #axes[1].plot([0, 120], [df['Avg_Drawdown%'][0], df['Avg_Drawdown%'][0]], linewidth=.7, color=pltColor['yellow'], linestyle='--')
+        #axes[1].plot([0, 120], [df['ATR%'][0], df['ATR%'][0]], linewidth=.7, color=pltColor['yellow'], linestyle='-')
         #axes[1].plot([0, 120], [df['Min_Drawdown%'][0], df['Min_Drawdown%'][0]], linewidth=.7, color=pltColor['red'], linestyle='--')
 
         # Text Color By signal
@@ -311,7 +311,8 @@ def getAnalysis(csvPath,preset,saveImage=False,showImage=False):
                      #'Avg Drawdown : {}%\n'.format(df['Avg_Drawdown%'][0]) +
                      #'Min Drawdown : {}%\n'.format(df['Min_Drawdown%'][0]) +
                      'N Day Drawdown : {}%\n'.format(df['NDay_Drawdown%'][0]) +
-                     'N Day TrueRange : {}%\n'.format(df['NDay_TrueRange%'][0])
+                     'N Day TrueRange : {}%\n'.format(df['NDay_TrueRange%'][0]) +
+                     'Avg TrueRange : {}%\n'.format(df['ATR%'][0])
                      , size=10, ha='left', va='top', color=((.4, .4, .4)))
         axes[1].text(100, df['NDay_Drawdown%'][0], '  ' + str(df['NDay_Drawdown%'][0].round(1))+'%',
                      size=10, ha='left', va='center',color=pltColor['text'])
@@ -414,6 +415,7 @@ def getSignalAllPreset(*_):
     new_signal_df = pd.read_csv(csvPath)
     new_signal_df = new_signal_df[new_signal_df['Rec_Date'] != rec_date]
     new_signal_df = new_signal_df.append(signal_df)
+    new_signal_df.drop_duplicates(subset=['Date', 'Quote', 'Preset'], keep='last', inplace=True)
     new_signal_df = new_signal_df.tail(6000)
     new_signal_df.to_csv(csvPath,index=False)
 
@@ -422,7 +424,7 @@ def getSignalAllPreset(*_):
         #gsheet_df = signal_df.sort_values(['Buy_Score','Preset'],ascending=[False,True])
         gsheet_csvPath = dataPath + os.sep + 'signal_gsheet.csv'
         #gsheet_df[['Rec_Date','Preset','Quote','Buy_Score']].to_csv(gsheet_csvPath,index=False)
-        gsheet_df = new_signal_df.drop_duplicates(subset=['Date', 'Quote', 'Preset'], keep='last', inplace=False, ignore_index=False)
+        #gsheet_df = new_signal_df.drop_duplicates(subset=['Date', 'Quote', 'Preset'], keep='last', inplace=False, ignore_index=False)
         gsheet_df.to_csv(gsheet_csvPath, index=False)
         gSheet.updateFromCSV(gsheet_csvPath, 'SignalRecord')
 
