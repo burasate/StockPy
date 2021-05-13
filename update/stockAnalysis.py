@@ -34,7 +34,6 @@ def getAnalysis(csvPath,preset,saveImage=False,showImage=False):
     ps_breakout_low = presetJson[preset]["breakOutL"]
     ps_sto_fast = presetJson[preset]["stoFast"]
     ps_sto_slow = presetJson[preset]["stoSlow"]
-    ps_gain_loss = presetJson[preset]["gainLost"]
 
     # Read Data Frame
     df = pd.read_csv(csvPath)
@@ -70,7 +69,7 @@ def getAnalysis(csvPath,preset,saveImage=False,showImage=False):
 
     # volume
     volume_sma_s = df_reverse['Volume'].rolling(2).mean()
-    volume_break_h = df_reverse['Volume'].rolling(2).max()
+    volume_break_h = df_reverse['Volume'].rolling(5).max()
     volume_sma_l = volume_sma_s.rolling(20).mean()
     df['Volume_SMA_S'] = volume_sma_s.sort_index(ascending=True)
     df['Volume_SMA_L'] = volume_sma_l.sort_index(ascending=True)
@@ -98,14 +97,18 @@ def getAnalysis(csvPath,preset,saveImage=False,showImage=False):
     df['SMA_L'] = sma_l.sort_index(ascending=True).round(2)
 
     # gain / loss ratio
-    gl_rolling = ps_gain_loss
+    #gl_rolling = ps_gain_loss
+    gl_rolling = ps_breakout_low
     gain = (df_reverse['Close']/df_reverse['Low'].rolling(gl_rolling).min())-1
     loss = 1-(df_reverse['Close']/df_reverse['High'].rolling(gl_rolling).max())
-    df['Gain'] = gain.sort_index(ascending=True).round(6)
-    df['Loss'] = loss.sort_index(ascending=True).round(6)
+    #df['Gain'] = gain.sort_index(ascending=True).round(6)
+    #df['Loss'] = loss.sort_index(ascending=True).round(6)
+    df['Gain'] = gain.round(6)
+    df['Loss'] = loss.round(6)
+    #df['GL_Ratio'] = (gain.rolling(gl_rolling).mean()/loss.rolling(gl_rolling).mean()).round(2)
     df['GL_Ratio'] = (gain.rolling(gl_rolling).mean()/loss.rolling(gl_rolling).mean()).round(2)
-    df['GL_Ratio'] = df['GL_Ratio'].replace([np.inf, -np.inf], 0)
-    df['GL_Ratio_Slow'] = df['GL_Ratio'].sort_index(ascending=False).rolling(5).mean().sort_index(ascending=True)
+    df['GL_Ratio'] = df['GL_Ratio'].replace([np.inf, -np.inf], 0).sort_index(ascending=True)
+    df['GL_Ratio_Slow'] = df['GL_Ratio'].sort_index(ascending=False).rolling(3).mean().sort_index(ascending=True)
     df['GL_Ratio_Avg'] = df['GL_Ratio'].mean()
 
     # drawdown
@@ -194,7 +197,7 @@ def getAnalysis(csvPath,preset,saveImage=False,showImage=False):
         # Line Plot
         axes[0].plot(df['Day'], df['BreakOut_H'], linewidth=.7, color=pltColor['green'], linestyle='-')
         axes[0].plot(df['Day'], df['BreakOut_L'], linewidth=.7, color=pltColor['red'], linestyle='-')
-        #axes[0].plot(df['Day'], df['BreakOut_M'], linewidth=.7, color=pltColor['yellow'], linestyle=':')
+        axes[0].plot(df['Day'], df['BreakOut_M'], linewidth=.7, color=pltColor['yellow'], linestyle=':')
         #axes[0].plot(df['Day'], df['BreakOut_MH'], linewidth=.7, color=pltColor['green'], linestyle='--',alpha=0.5)
         #axes[0].plot(df['Day'], df['BreakOut_ML'], linewidth=.7, color=pltColor['red'], linestyle='--',alpha=0.5)
 
@@ -340,6 +343,7 @@ def getSignalAllPreset(*_):
     for file in histFileList:
         quote = file.split('.')[0]
         count += 1
+        os.system('cls||clear')
         print('{}/{}  {}'.format(count,len(histFileList),quote))
         for ps in presetJson:
             try:
@@ -352,7 +356,7 @@ def getSignalAllPreset(*_):
                 entry_condition_list = [df['SMA_S'][0] > df['SMA_L'][0], #0
                                         df['%K'][0] > df['%D'][0], #1
                                         df['GL_Ratio'][0] > df['GL_Ratio_Slow'][0], #2
-                                        df['Volume_Break_H'][0] > df['Volume_Avg'][0] #3
+                                        df['Volume_Break_H'][0] >= df['Volume_Break_H'][1] #3
                                         ]
 
                 exit_condition_list = [df['SMA_S'][0] < df['SMA_L'][0],
@@ -386,7 +390,6 @@ def getSignalAllPreset(*_):
                     if con:
                         df['Buy_Score'] = df['Buy_Score']-1
 
-                os.system('cls||clear')
                 # Trade Entry
                 if filter_condition and entry_condition:
                     print('Preset : {} | Entry : {}'.format(ps,file))
@@ -415,12 +418,13 @@ def getSignalAllPreset(*_):
     new_signal_df.to_csv(csvPath,index=False)
 
     # Update G Sheet
-    #gsheet_df = signal_df.sort_values(['Buy_Score','Preset'],ascending=[False,True])
-    gsheet_csvPath = dataPath + os.sep + 'signal_gsheet.csv'
-    #gsheet_df[['Rec_Date','Preset','Quote','Buy_Score']].to_csv(gsheet_csvPath,index=False)
-    gsheet_df = new_signal_df.drop_duplicates(subset=['Date', 'Quote', 'Preset'], keep='last', inplace=False, ignore_index=False)
-    gsheet_df.to_csv(gsheet_csvPath, index=False)
-    gSheet.updateFromCSV(gsheet_csvPath, 'SignalRecord')
+    if not os.name == 'nt':
+        #gsheet_df = signal_df.sort_values(['Buy_Score','Preset'],ascending=[False,True])
+        gsheet_csvPath = dataPath + os.sep + 'signal_gsheet.csv'
+        #gsheet_df[['Rec_Date','Preset','Quote','Buy_Score']].to_csv(gsheet_csvPath,index=False)
+        gsheet_df = new_signal_df.drop_duplicates(subset=['Date', 'Quote', 'Preset'], keep='last', inplace=False, ignore_index=False)
+        gsheet_df.to_csv(gsheet_csvPath, index=False)
+        gSheet.updateFromCSV(gsheet_csvPath, 'SignalRecord')
 
 def backTesting(quote,preset):
     #import csv from yahoofinance
@@ -580,15 +584,15 @@ def backTesting(quote,preset):
 
 
 if __name__ == '__main__' :
-    #import update
-    #update.updatePreset()
-    #presetPath = dataPath + '/preset.json'
-    #presetJson = json.load(open(presetPath))
+    import update
+    update.updatePreset()
+    presetPath = dataPath + '/preset.json'
+    presetJson = json.load(open(presetPath))
 
-    import stockHistorical
-    stockHistorical.LoadHist('TPLAS')
-    getAnalysis(histPath + 'TPLAS' + '.csv', 'S4',saveImage=False,showImage=True)
-    #getSignalAllPreset()
+    #import stockHistorical
+    #stockHistorical.LoadHist('IVL')
+    #getAnalysis(histPath + 'IVL' + '.csv', 'S4',saveImage=False,showImage=True)
+    getSignalAllPreset()
 
     """
     # Backtesting...
