@@ -118,7 +118,6 @@ if os.name == 'nt': #Windows
         #time.sleep(60*5)
 
 else: #Raspi
-    #pass
     import update
     while True:
         try:
@@ -138,6 +137,7 @@ else: #Raspi
         else:
             os.system('cls||clear')
             print('SET Market is Close')
+            time.sleep(60*30)
 
 if __name__ == '__main__' :
     #GetRealtime('SSP')
