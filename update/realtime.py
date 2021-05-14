@@ -1,4 +1,4 @@
-import json,time,csv,requests,os,ast
+import json,time,csv,requests,os,ast,pprint
 from datetime import datetime as dt
 from bs4 import BeautifulSoup
 import pandas as pd
@@ -42,7 +42,7 @@ def GetRealtime (Quote,connectCount = 5):
         value = value.replace('\r','')
         value = value.replace(' ','')
         #print(value)
-        if value == '':
+        if value == '' or value == '-':
             value = '0'
         try:
             value = ast.literal_eval(value)
@@ -76,8 +76,11 @@ def GetAllRealtime (*_):
     #print(df[['Date','Quote','Preset','Close']])
 
     rec = []
-    for i in range(df['Quote'].count()):
+    totalCount = range(df['Quote'].count())
+    for i in totalCount:
+        os.system('cls||clear')
         row = df.iloc[i]
+        print( '{}/{}'.format( i+1,len( totalCount ) ) )
         print(row['Quote'])
         data = GetRealtime(row['Quote'])
         if data != None:
@@ -95,32 +98,26 @@ def GetAllRealtime (*_):
                 data['signal'] = 'Entry'
             elif data['last'] > data['breakMidHigh']:
                 data['signal'] = 'Entry'
-
-        #print(data)
+        rec.append(data)
+        #convert row to list and add row
         rowData = pd.DataFrame.from_records([data]).values.tolist()[0]
-        #print(pd.DataFrame.from_records([data]).values.tolist())
         gSheet.addRow('Realtime',rowData)
-        print(rowData)
-        #rec.append(data)
-        #rec.append(pd.DataFrame.from_records(data).values.tolist())
-    #print(rec)
-    #realtimeData = gSheet.getAllDataS('Realtime')
-    #df_realtime = pd.DataFrame.from_records(realtimeData)
-    #df_realtime = df_realtime.append(
-        #pd.DataFrame.from_records(rec)
-    #)
-    #df_realtime = df_realtime.tail(8000)
-    #df_realtime.to_csv(dataPath+'/realtime.csv',index=False)
-    #gSheet.updateFromCSV(dataPath+'/realtime.csv', 'Realtime')
+        pprint.pprint(data)
+    realtimeData = gSheet.getAllDataS('Realtime')
+    df_realtime = pd.DataFrame.from_records(realtimeData)
+    df_realtime = df_realtime.append( pd.DataFrame.from_records(rec) )
+    df_realtime = df_realtime.tail(10000)
+    df_realtime.to_csv(dataPath+'/realtime.csv',index=False)
+    gSheet.updateFromCSV(dataPath+'/realtime.csv', 'Realtime')
 
-
+marketHour = [9,10,11,12,14,15,16,17]
 if os.name == 'nt': #Windows
     while True:
         GetAllRealtime()
         #time.sleep(60*5)
 
 else: #Raspi
-    pass
+    #pass
     import update
     while True:
         try:
@@ -131,10 +128,12 @@ else: #Raspi
         except:
             pass
     while True:
-        try:
-            GetAllRealtime()
-            time.sleep(60*1)
-        except: pass
+        hour = int(dt.now().hour)
+        if hour in marketHour:
+            try:
+                GetAllRealtime()
+                #time.sleep(60*1)
+            except: pass
 
 if __name__ == '__main__' :
     #GetRealtime('SSP')
