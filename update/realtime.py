@@ -134,6 +134,9 @@ else: #Raspi
                 GetAllRealtime()
                 #time.sleep(60*1)
             except: pass
+        else:
+            os.system('cls||clear')
+            print('SET Market is Close')
 
 if __name__ == '__main__' :
     #GetRealtime('SSP')
