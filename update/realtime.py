@@ -62,7 +62,7 @@ def GetRealtime (Quote,connectCount = 5):
     data['value'] = dataList[9][1] * 1000
     return data
 
-def GetAllRealtime (*_):
+def GetAllRealtime (recordData=True,cleanupData=True):
     signalData = gSheet.getAllDataS('SignalRecord')
     df = pd.read_csv(dataPath + '/signal.csv')
     df = df.append(

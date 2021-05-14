@@ -4,5 +4,6 @@
   "update.py": "https://raw.githubusercontent.com/burasate/StockPy/main/update/update.py",
   "stockAnalysis.py": "https://raw.githubusercontent.com/burasate/StockPy/main/update/stockAnalysis.py",
   "stockHistorical.py": "https://raw.githubusercontent.com/burasate/StockPy/main/update/stockHistorical.py",
-  "realtime.py": "https://raw.githubusercontent.com/burasate/StockPy/main/update/realtime.py"
+  "realtime.py": "https://raw.githubusercontent.com/burasate/StockPy/main/update/realtime.py",
+  "realtime_extra.py": "https://raw.githubusercontent.com/burasate/StockPy/main/update/realtime_extra.py"
 }
