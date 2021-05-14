@@ -16,7 +16,6 @@ def connect(*_):
 
 def updateFromCSV(csvPath, workSheet):
     sheet = connect().open(sheetName).worksheet(workSheet)
-
     #load csv
     tableList = []
     index = 0
@@ -24,7 +23,6 @@ def updateFromCSV(csvPath, workSheet):
         for row in csv.reader(readfile):
             tableList.append(row)
         readfile.close()
-
     sheet.clear()
     sheet.update(tableList,value_input_option='USER_ENTERED')
 

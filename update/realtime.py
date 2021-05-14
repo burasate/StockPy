@@ -73,7 +73,7 @@ def GetAllRealtime (*_):
     df = df[df['Rec_Date'] == last_date]
     df = df[df['Signal'] == 'Entry']
     df.reset_index(inplace=True)
-    print(df[['Date','Quote','Preset','Close']])
+    #print(df[['Date','Quote','Preset','Close']])
 
     rec = []
     for i in range(df['Quote'].count()):
@@ -96,26 +96,31 @@ def GetAllRealtime (*_):
             elif data['last'] > data['breakMidHigh']:
                 data['signal'] = 'Entry'
 
-        print(data)
-        rec.append(data)
-    realtimeData = gSheet.getAllDataS('Realtime')
-    df_realtime = pd.DataFrame.from_records(realtimeData)
-    df_realtime = df_realtime.append(
-        pd.DataFrame.from_records(rec)
-    )
-    df_realtime = df_realtime.tail(8000)
-    df_realtime.to_csv(dataPath+'/realtime.csv',index=False)
-    gSheet.updateFromCSV(dataPath+'/realtime.csv', 'Realtime')
+        #print(data)
+        rowData = pd.DataFrame.from_records([data]).values.tolist()[0]
+        #print(pd.DataFrame.from_records([data]).values.tolist())
+        gSheet.addRow('Realtime',rowData)
+        print(rowData)
+        #rec.append(data)
+        #rec.append(pd.DataFrame.from_records(data).values.tolist())
+    #print(rec)
+    #realtimeData = gSheet.getAllDataS('Realtime')
+    #df_realtime = pd.DataFrame.from_records(realtimeData)
+    #df_realtime = df_realtime.append(
+        #pd.DataFrame.from_records(rec)
+    #)
+    #df_realtime = df_realtime.tail(8000)
+    #df_realtime.to_csv(dataPath+'/realtime.csv',index=False)
+    #gSheet.updateFromCSV(dataPath+'/realtime.csv', 'Realtime')
 
 
 if os.name == 'nt': #Windows
     while True:
-        try:
-            GetAllRealtime()
-            #time.sleep(60*5)
-        except: pass
+        GetAllRealtime()
+        #time.sleep(60*5)
 
 else: #Raspi
+    return None
     import update
     while True:
         try:
