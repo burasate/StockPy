@@ -111,7 +111,6 @@ def GetAllRealtime (*_):
     gSheet.updateFromCSV(dataPath+'/realtime.csv', 'Realtime')
 
 marketHour = [9,10,11,12,14,15,16,17]
-os.system("Real-Time SET Market")
 if os.name == 'nt': #Windows
     while True:
         GetAllRealtime()
@@ -128,6 +127,8 @@ else: #Raspi
         except:
             pass
     while True:
+        import ctypes
+        ctypes.windll.kernel32.SetConsoleTitleW("Real-Time SET Market")
         hour = int(dt.now().hour)
         if hour in marketHour:
             try:
