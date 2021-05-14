@@ -127,8 +127,6 @@ else: #Raspi
         except:
             pass
     while True:
-        import ctypes
-        ctypes.windll.kernel32.SetConsoleTitleW("Real-Time SET Market")
         hour = int(dt.now().hour)
         if hour in marketHour:
             try:
