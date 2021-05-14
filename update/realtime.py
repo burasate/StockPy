@@ -111,6 +111,7 @@ def GetAllRealtime (*_):
     gSheet.updateFromCSV(dataPath+'/realtime.csv', 'Realtime')
 
 marketHour = [9,10,11,12,14,15,16,17]
+os.system("Real-Time SET Market")
 if os.name == 'nt': #Windows
     while True:
         GetAllRealtime()
