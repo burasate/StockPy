@@ -120,7 +120,7 @@ if os.name == 'nt': #Windows
         #time.sleep(60*5)
 
 else: #Raspi
-    return None
+    pass
     import update
     while True:
         try:
