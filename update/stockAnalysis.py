@@ -422,10 +422,7 @@ def getSignalAllPreset(*_):
 def uploadSignalData(*_):
     if not os.name == 'nt':
         signalPath = dataPath + os.sep + 'signal.csv'
-        #gsheet_df = pd.read_csv(signalPath)
-        #gsheet_csvPath = dataPath + os.sep + 'signal_gsheet.csv'
         print('update signal data...')
-        gsheet_df.to_csv(gsheet_csvPath, index=False)
         gSheet.updateFromCSV(signalPath, 'SignalRecord')
         print('update signal data finish')
 
@@ -597,6 +594,7 @@ if __name__ == '__main__' :
     #stockHistorical.LoadHist('IVL')
     #getAnalysis(histPath + 'IVL' + '.csv', 'S4',saveImage=False,showImage=True)
     getSignalAllPreset()
+    uploadSignalData()
 
     """
     # Backtesting...
