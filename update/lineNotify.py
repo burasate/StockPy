@@ -1,6 +1,7 @@
 import json,requests,os
 import pandas as pd
 import numpy as np
+import gSheet
 
 rootPath = os.path.dirname(os.path.abspath(__file__))
 dataPath = rootPath+'/data'
@@ -33,6 +34,7 @@ def sendNotifyImageMsg (token,imagePath,text):
 def signalReportToUser(*_):
     import datetime as dt
     date = dt.date.today().strftime('%d/%m/%Y')
+    dateTime = dt.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     import stockAnalysis
     for user in configJson:
         if bool(configJson[user]['active']):
@@ -56,14 +58,10 @@ def signalReportToUser(*_):
             last_date = df['Rec_Date'].tail(1).tolist()[0]
             df = df[df['Rec_Date'] == last_date]
             #df = df[df['Rec_Date'] == df['Rec_Date'].max()]
-            print(df)
 
             df =  df[df['Preset']==preset]
             entry_list =  df[df['Signal']=='Entry']['Quote'].tolist()
             exit_list =  df[df['Signal']=='Exit']['Quote'].tolist()
-            #print(entry_list)
-            #print(exit_list)
-
 
             # Message Text
             text_buy = 'Trade Entry △ \n   {}\n'.format(' '.join(entry_list))
@@ -73,6 +71,7 @@ def signalReportToUser(*_):
                         'Preset Name \"{}\" '.format(preset) +\
                         '\n' + text_buy + text_sell
             #print(msg_signal)
+
             sendNotifyMassage(token, msg_signal)
 
             #Send Images
@@ -101,14 +100,23 @@ def signalReportToUser(*_):
                                 pass
                 else:
                     sendNotifyMassage(token, q_msg)
+                    pass
+            try:
+                gSheet.setValue('Config',findKey='idName',findValue=user,key='lastSent',value=dateTime)
+            except: pass
 
 
 if __name__=='__main__':
     #sendNotifyMassage('Fq2uIz8AnqmCS2J9eA6ttmVhY1dfDdPp7lzAlsrDc44','test')
-    #sendNotifyImageMsg('Fq2uIz8AnqmCS2J9eA6ttmVhY1dfDdPp7lzAlsrDc44','C:/Users/DEX3D_I7/Pictures/UglyDolls2_1.mp4_snapshot_01.17.998.jpg',"asfdfas")
-    #import update
-    #update.updatePreset()
-    #presetPath = dataPath + '/preset.json'
-    #presetJson = json.load(open(presetPath))
-    #signalReportToUser()
+    #sendNotifyImageMsg('Fq2uIz8AnqmCS2J9eA6ttmVhY1dfDdPp7lzAlsrDc44','s2_1.mp4_snapshot_01.17.998.jpg',"asfdfas")
+
+    import update
+    update.updatePreset()
+    presetPath = dataPath + '/preset.json'
+    presetJson = json.load(open(presetPath))
+    update.updateConfig()
+    configPath = dataPath + '/config.json'
+    configJson = json.load(open(configPath))
+
+    signalReportToUser()
     pass
