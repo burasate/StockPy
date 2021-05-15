@@ -419,14 +419,16 @@ def getSignalAllPreset(*_):
     new_signal_df = new_signal_df.tail(6000)
     new_signal_df.to_csv(csvPath,index=False)
 
-    # Update G Sheet
+def uploadSignalData(*_):
     if not os.name == 'nt':
-        #gsheet_df = signal_df.sort_values(['Buy_Score','Preset'],ascending=[False,True])
-        gsheet_csvPath = dataPath + os.sep + 'signal_gsheet.csv'
-        #gsheet_df[['Rec_Date','Preset','Quote','Buy_Score']].to_csv(gsheet_csvPath,index=False)
-        #gsheet_df = new_signal_df.drop_duplicates(subset=['Date', 'Quote', 'Preset'], keep='last', inplace=False, ignore_index=False)
+        signalPath = dataPath + os.sep + 'signal.csv'
+        #gsheet_df = pd.read_csv(signalPath)
+        #gsheet_csvPath = dataPath + os.sep + 'signal_gsheet.csv'
+        print('update signal data...')
         gsheet_df.to_csv(gsheet_csvPath, index=False)
-        gSheet.updateFromCSV(gsheet_csvPath, 'SignalRecord')
+        gSheet.updateFromCSV(signalPath, 'SignalRecord')
+        print('update signal data finish')
+
 
 def backTesting(quote,preset):
     #import csv from yahoofinance

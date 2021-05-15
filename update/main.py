@@ -19,6 +19,7 @@ stockHistorical.LoadAllHist()
 
 import stockAnalysis
 stockAnalysis.getSignalAllPreset()
+stockAnalysis.uploadSignalData()
 
 import lineNotify
 lineNotify.signalReportToUser()
