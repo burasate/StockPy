@@ -128,7 +128,8 @@ else: #Raspi
             pass
     while True:
         hour = int(dt.now().hour)
-        if hour in marketHour:
+        weekDay = int(dt.now().weekday())
+        if hour in marketHour and weekDay < 5:
             try:
                 GetAllRealtime()
                 #time.sleep(60*1)
