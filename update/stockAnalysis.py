@@ -1,8 +1,7 @@
 from matplotlib import pyplot as plt
 import pandas as pd
 import numpy as np
-import json
-import os
+import json,time,os
 import datetime as dt
 from shutil import copyfile
 import gSheet
@@ -425,6 +424,12 @@ def uploadSignalData(*_):
         print('update signal data...')
         gSheet.updateFromCSV(signalPath, 'SignalRecord')
         print('update signal data finish')
+        while True:
+            time.sleep(5)
+            if gSheet.getAllDataS('SignalRecord') != []:
+                break
+            else:
+                gSheet.updateFromCSV(signalPath, 'SignalRecord')
 
 
 def backTesting(quote,preset):
