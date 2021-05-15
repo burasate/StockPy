@@ -73,7 +73,9 @@ def GetAllRealtime (recordData=True,cleanupData=True):
     df = df[df['Rec_Date'] == last_date]
     df = df[df['Signal'] == 'Entry']
     df.reset_index(inplace=True)
-    #print(df[['Date','Quote','Preset','Close']])
+
+    realtimeData = gSheet.getAllDataS('Realtime')
+    df_realtime = pd.DataFrame.from_records(realtimeData)
 
     rec = []
     totalCount = range(df['Quote'].count())
@@ -82,6 +84,24 @@ def GetAllRealtime (recordData=True,cleanupData=True):
         row = df.iloc[i]
         print( '{}/{}'.format( i+1,len( totalCount ) ) )
         print(row['Quote'])
+
+        # Send Sell Buy from last
+        sendBuy = df_realtime[(df_realtime['quote'] == row['Quote']) &
+                              (df_realtime['preset'] == row['Preset'])].groupby(['quote', 'preset'])[
+                'sendBuy'].tail(1).tolist()
+        sendSell = df_realtime[(df_realtime['quote'] == row['Quote']) &
+                              (df_realtime['preset'] == row['Preset'])].groupby(['quote', 'preset'])[
+            'sendSell'].tail(1).tolist()
+        if sendBuy != []:
+            sendBuy = sendBuy[0]
+        else:
+            sendBuy = 0
+        if sendSell != []:
+            sendSell = sendSell[0]
+        else:
+            sendSell = 0
+
+        #Fill Collumn
         data = GetRealtime(row['Quote'])
         if data != None:
             data['preset'] = row['Preset']
@@ -90,6 +110,8 @@ def GetAllRealtime (recordData=True,cleanupData=True):
             data['breakMidHigh'] = row['BreakOut_MH']
             data['breakMidLow'] = row['BreakOut_ML']
             data['signal'] = ''
+            data['sendBuy'] = sendBuy
+            data['sendSell'] = sendSell
             if data['last'] < data['breakMidLow'] and data['last'] > data['breakLow']:
                 data['signal'] = 'Entry'
             elif data['last'] < data['breakLow']:
@@ -98,17 +120,57 @@ def GetAllRealtime (recordData=True,cleanupData=True):
                 data['signal'] = 'Entry'
             elif data['last'] > data['breakMidHigh']:
                 data['signal'] = 'Entry'
+            if data['signal'] == 'Entry' and data['sendBuy'] == 0:
+                SendRealtimeSignal(row['Preset'], row['Quote'], 'buy', data['last'], data['breakLow'])
+                data['sendBuy'] = 1
+            elif data['signal'] == 'Exit' and data['sendSell'] == 0:
+                SendRealtimeSignal(row['Preset'], row['Quote'], 'sell', data['last'], data['breakLow'])
+                data['sendSell'] = 1
+                data['sendBuy'] = 0
         rec.append(data)
         #convert row to list and add row
         rowData = pd.DataFrame.from_records([data]).values.tolist()[0]
-        gSheet.addRow('Realtime',rowData)
+        if recordData:
+            gSheet.addRow('Realtime',rowData)
         pprint.pprint(data)
-    realtimeData = gSheet.getAllDataS('Realtime')
-    df_realtime = pd.DataFrame.from_records(realtimeData)
-    df_realtime = df_realtime.append( pd.DataFrame.from_records(rec) )
-    df_realtime = df_realtime.tail(10000)
-    df_realtime.to_csv(dataPath+'/realtime.csv',index=False)
-    gSheet.updateFromCSV(dataPath+'/realtime.csv', 'Realtime')
+    if recordData and cleanupData:
+        df_realtime = df_realtime.append( pd.DataFrame.from_records(rec) )
+        df_realtime.drop_duplicates(['quote','preset','hour','minute'],keep='last',inplace=True)
+        df_realtime['sendBuy'] = df_realtime.groupby(['quote', 'preset'])['sendBuy'].transform('last')
+        df_realtime['sendSell'] = df_realtime.groupby(['quote', 'preset'])['sendSell'].transform('last')
+        df_realtime = df_realtime.tail(10000)
+        df_realtime.to_csv(dataPath+'/realtime.csv',index=False)
+        while True:
+            gSheet.updateFromCSV(dataPath+'/realtime.csv', 'Realtime')
+            time.sleep(5)
+            if gSheet.getAllDataS('Realtime') != []:
+                break
+
+def getTokenByPreset(preset):
+    data = []
+    for user in configJson:
+        if configJson[user]['preset'] == preset and bool(configJson[user]['realtime']):
+            token = configJson[user]['lineToken']
+            data.append(token)
+    return data
+
+def SendRealtimeSignal(preset,quote,side,price,cut):
+    tokenList = getTokenByPreset(preset)
+    if tokenList == []:
+        return None
+    text = ''
+    percentage_cutLoss = round( ((price-cut)/price)*100 ,2)
+    if side.lower() == 'buy':
+        text = 'Buy    {}    {}\nCut Loss    {} (▽{}%)'.format(quote,price,cut,percentage_cutLoss)
+    elif side.lower() == 'sell':
+        text = 'Sell    {}    {}'.format(quote,price)
+    else:
+        return None
+    print('{}  {}'.format(preset,text))
+    for token in tokenList:
+        #print(token)
+        lineNotify.sendNotifyMassage(token,text)
+        pass
 
 marketHour = [9,10,11,12,14,15,16,17]
 if os.name == 'nt': #Windows
@@ -138,7 +200,3 @@ else: #Raspi
             os.system('cls||clear')
             print('SET Market is Close')
             time.sleep(60*30)
-
-if __name__ == '__main__' :
-    #GetRealtime('SSP')
-    pass

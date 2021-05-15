@@ -13,7 +13,8 @@ if not os.name == 'nt': #Raspi
             pass
     while True:
         hour = int(dt.now().hour)
-        if hour in marketHour:
+        weekDay = int(dt.now().weekday())
+        if hour in marketHour and weekDay < 5:
             try:
                 GetAllRealtime(recordData=True,cleanupData=False)
                 #time.sleep(60*1)

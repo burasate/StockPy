@@ -431,7 +431,6 @@ def uploadSignalData(*_):
             else:
                 gSheet.updateFromCSV(signalPath, 'SignalRecord')
 
-
 def backTesting(quote,preset):
     #import csv from yahoofinance
     filePath = dataPath+'/backtesting_hist/'+quote+'.BK.csv'
