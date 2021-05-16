@@ -172,6 +172,8 @@ def SendRealtimeSignal(preset,quote,side,price,cut):
         lineNotify.sendNotifyMassage(token,text)
         pass
 
+print('SET Real-Time Recorder')
+time.sleep(60)
 marketHour = [9,10,11,12,14,15,16,17]
 if os.name == 'nt': #Windows
     while True:
@@ -182,9 +184,9 @@ else: #Raspi
     import update
     while True:
         try:
+            update.updateAllFile()
             update.updateConfig()
             update.updatePreset()
-            update.updateAllFile()
             break
         except:
             pass
