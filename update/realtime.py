@@ -97,7 +97,7 @@ def GetAllRealtime (recordData=True,cleanupData=True):
                 'sendBuy'].tail(1).tolist()
         sendSell = df_realtime[(df_realtime['quote'] == row['Quote']) &
                               (df_realtime['preset'] == row['Preset'])].groupby(['quote', 'preset'])[
-            'sendSell'].tail(1).tolist()
+                'sendSell'].tail(1).tolist()
         if sendBuy != []:
             sendBuy = sendBuy[0]
         else:
@@ -118,6 +118,7 @@ def GetAllRealtime (recordData=True,cleanupData=True):
             data['signal'] = ''
             data['sendBuy'] = sendBuy
             data['sendSell'] = sendSell
+            data['timeID'] = '{}_{}'.format( str(data['hour']).zfill(2), str(data['minute']).zfill(2) )
             if data['last'] < data['breakMidLow'] and data['last'] > data['breakLow']:
                 data['signal'] = 'Entry'
             elif data['last'] < data['breakLow']:
@@ -129,6 +130,7 @@ def GetAllRealtime (recordData=True,cleanupData=True):
             if data['signal'] == 'Entry' and data['sendBuy'] == 0:
                 SendRealtimeSignal(row['Preset'], row['Quote'], 'buy', data['last'], data['breakLow'])
                 data['sendBuy'] = 1
+                data['sendSell'] = 0
             elif data['signal'] == 'Exit' and data['sendSell'] == 0:
                 SendRealtimeSignal(row['Preset'], row['Quote'], 'sell', data['last'], data['breakLow'])
                 data['sendSell'] = 1
@@ -177,15 +179,16 @@ def SendRealtimeSignal(preset,quote,side,price,cut):
         #print(token)
         lineNotify.sendNotifyMassage(token,text)
         pass
+
 print('SET Real-Time Recorder')
-time.sleep(60)
 if os.name == 'nt': #Windows
     while True:
-        pass
-        #GetAllRealtime()
+        #pass
+        GetAllRealtime()
         #time.sleep(60*5)
 
 else: #Raspi
+    time.sleep(60)
     import update
     while True:
         try:
