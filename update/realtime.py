@@ -1,4 +1,4 @@
-import json,time,csv,requests,os,ast,pprint
+import json,time,csv,requests,os,ast,pprint,datetime
 from datetime import datetime as dt
 from bs4 import BeautifulSoup
 import pandas as pd
@@ -11,6 +11,12 @@ configPath = dataPath + '/config.json'
 configJson = json.load(open(configPath))
 presetPath = dataPath + '/preset.json'
 presetJson = json.load(open(presetPath))
+
+def isNowInTimePeriod(startTime, endTime, nowTime):
+    if startTime < endTime:
+        return startTime <= nowTime <= endTime
+    else: #Over midnight
+        return nowTime >= startTime or nowTime <= endTime
 
 def GetRealtime (Quote,connectCount = 5):
     df = pd.DataFrame()
@@ -118,8 +124,8 @@ def GetAllRealtime (recordData=True,cleanupData=True):
                 data['signal'] = 'Exit'
             elif data['low'] < data['breakLow'] and data['last'] > data['breakLow']:
                 data['signal'] = 'Entry'
-            elif data['last'] > data['breakMidHigh']:
-                data['signal'] = 'Entry'
+            #elif data['last'] > data['breakMidHigh']:
+                #data['signal'] = 'Entry'
             if data['signal'] == 'Entry' and data['sendBuy'] == 0:
                 SendRealtimeSignal(row['Preset'], row['Quote'], 'buy', data['last'], data['breakLow'])
                 data['sendBuy'] = 1
@@ -171,13 +177,12 @@ def SendRealtimeSignal(preset,quote,side,price,cut):
         #print(token)
         lineNotify.sendNotifyMassage(token,text)
         pass
-
 print('SET Real-Time Recorder')
 time.sleep(60)
-marketHour = [9,10,11,12,14,15,16,17]
 if os.name == 'nt': #Windows
     while True:
-        GetAllRealtime()
+        pass
+        #GetAllRealtime()
         #time.sleep(60*5)
 
 else: #Raspi
@@ -192,8 +197,11 @@ else: #Raspi
             pass
     while True:
         hour = int(dt.now().hour)
+        minute = int(dt.now().minute)
+        morning = isNowInTimePeriod(datetime.time(9, 55), datetime.time(12, 30), datetime.time(hour, minute))
+        afternoon = isNowInTimePeriod(datetime.time(14, 30), datetime.time(16, 45), datetime.time(hour, minute))
         weekDay = int(dt.now().weekday())
-        if hour in marketHour and weekDay < 5:
+        if ( morning or afternoon ) and weekDay < 5:
             try:
                 GetAllRealtime()
                 #time.sleep(60*1)
@@ -201,4 +209,4 @@ else: #Raspi
         else:
             os.system('cls||clear')
             print('SET Market is Close')
-            time.sleep(60*30)
+            time.sleep(60*15)
