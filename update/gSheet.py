@@ -14,7 +14,7 @@ def connect(*_):
     gc = gspread.authorize(credential)
     return gc
 
-def updateFromCSV(csvPath, workSheet):
+def updateFromCSV(csvPath, workSheet, clearAll = True):
     sheet = connect().open(sheetName).worksheet(workSheet)
     #load csv
     tableList = []
@@ -23,7 +23,8 @@ def updateFromCSV(csvPath, workSheet):
         for row in csv.reader(readfile):
             tableList.append(row)
         readfile.close()
-    sheet.clear()
+    if clearAll:
+    	sheet.clear()
     sheet.update(tableList,value_input_option='USER_ENTERED')
 
 def loadConfigData(idName):
