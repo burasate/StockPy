@@ -119,14 +119,15 @@ def GetAllRealtime (recordData=True,cleanupData=True):
             data['sendBuy'] = sendBuy
             data['sendSell'] = sendSell
             data['timeID'] = '{}_{}'.format( str(data['hour']).zfill(2), str(data['minute']).zfill(2) )
-            if data['last'] < data['breakMidLow'] and data['last'] > data['breakLow']:
-                data['signal'] = 'Entry'
-            elif data['last'] < data['breakLow']:
-                data['signal'] = 'Exit'
-            elif data['low'] < data['breakLow'] and data['last'] > data['breakLow']:
-                data['signal'] = 'Entry'
-            #elif data['last'] > data['breakMidHigh']:
-                #data['signal'] = 'Entry'
+            if data['last'] != 0:
+                if data['last'] < data['breakMidLow'] and data['last'] > data['breakLow']:
+                    data['signal'] = 'Entry'
+                elif data['last'] < data['breakLow']:
+                    data['signal'] = 'Exit'
+                elif data['low'] < data['breakLow'] and data['last'] > data['breakLow']:
+                    data['signal'] = 'Entry'
+                #elif data['last'] > data['breakMidHigh']:
+                    #data['signal'] = 'Entry'
             if data['signal'] == 'Entry' and data['sendBuy'] == 0:
                 SendRealtimeSignal(row['Preset'], row['Quote'], 'buy', data['last'], data['breakLow'])
                 data['sendBuy'] = 1
