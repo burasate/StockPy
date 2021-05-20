@@ -33,6 +33,7 @@ def GetRealtime (Quote,connectCount = 5):
 
     data = {
         'dateTime' : dt.now().strftime('%Y-%m-%d %H:%M:%S'),
+        'time' : dt.now().strftime('%H:%M:%S'),
         'hour' : int(dt.now().strftime('%H')),
         'minute' : int(dt.now().strftime('%M')),
         'quote' : Quote
@@ -94,10 +95,10 @@ def GetAllRealtime (recordData=True,cleanupData=True):
         # Send Sell Buy from last
         sendBuy = df_realtime[(df_realtime['quote'] == row['Quote']) &
                               (df_realtime['preset'] == row['Preset'])].groupby(['quote', 'preset'])[
-                'sendBuy'].tail(1).tolist()
+            'sendBuy'].tail(1).tolist()
         sendSell = df_realtime[(df_realtime['quote'] == row['Quote']) &
-                              (df_realtime['preset'] == row['Preset'])].groupby(['quote', 'preset'])[
-                'sendSell'].tail(1).tolist()
+                               (df_realtime['preset'] == row['Preset'])].groupby(['quote', 'preset'])[
+            'sendSell'].tail(1).tolist()
         if sendBuy != []:
             sendBuy = sendBuy[0]
         else:
@@ -118,7 +119,6 @@ def GetAllRealtime (recordData=True,cleanupData=True):
             data['signal'] = ''
             data['sendBuy'] = sendBuy
             data['sendSell'] = sendSell
-            data['timeID'] = '{}_{}'.format( str(data['hour']).zfill(2), str(data['minute']).zfill(2) )
             if data['last'] != 0:
                 if data['last'] < data['breakMidLow'] and data['last'] > data['breakLow']:
                     data['signal'] = 'Entry'
@@ -147,7 +147,7 @@ def GetAllRealtime (recordData=True,cleanupData=True):
         df_realtime.drop_duplicates(['quote','preset','hour','minute'],keep='last',inplace=True)
         df_realtime['sendBuy'] = df_realtime.groupby(['quote', 'preset'])['sendBuy'].transform('last')
         df_realtime['sendSell'] = df_realtime.groupby(['quote', 'preset'])['sendSell'].transform('last')
-        df_realtime = df_realtime.tail(10000)
+        df_realtime = df_realtime.tail(5000)
         df_realtime.to_csv(dataPath+'/realtime.csv',index=False)
         while True:
             gSheet.updateFromCSV(dataPath+'/realtime.csv', 'Realtime')
@@ -184,9 +184,12 @@ def SendRealtimeSignal(preset,quote,side,price,cut):
 print('SET Real-Time Recorder')
 if os.name == 'nt': #Windows
     while True:
-        #pass
-        GetAllRealtime()
-        #time.sleep(60*5)
+        try:
+            #pass
+            GetAllRealtime(recordData=True,cleanupData=True)
+            #time.sleep(60*5)
+        except:
+            print(IOError.strerror())
 
 else: #Raspi
     time.sleep(60)
@@ -213,4 +216,4 @@ else: #Raspi
         else:
             os.system('cls||clear')
             print('SET Market is Close')
-            time.sleep(60*15)
+            time.sleep(60*10)

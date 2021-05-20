@@ -1,6 +1,7 @@
-import os
+import json,time,csv,requests,os,ast,pprint,datetime
+from datetime import datetime as dt
 import realtime
-marketHour = [9,10,11,12,14,15,16,17]
+print('SET Real-Time Recorder')
 if not os.name == 'nt': #Raspi
     import update
     while True:
@@ -13,8 +14,11 @@ if not os.name == 'nt': #Raspi
             pass
     while True:
         hour = int(dt.now().hour)
+        minute = int(dt.now().minute)
+        morning = isNowInTimePeriod(datetime.time(9, 55), datetime.time(12, 30), datetime.time(hour, minute))
+        afternoon = isNowInTimePeriod(datetime.time(14, 30), datetime.time(16, 45), datetime.time(hour, minute))
         weekDay = int(dt.now().weekday())
-        if hour in marketHour and weekDay < 5:
+        if (morning or afternoon) and weekDay < 5:
             try:
                 GetAllRealtime(recordData=True,cleanupData=False)
                 #time.sleep(60*1)
@@ -22,4 +26,4 @@ if not os.name == 'nt': #Raspi
         else:
             os.system('cls||clear')
             print('SET Market is Close')
-            time.sleep(60*30)
+            time.sleep(60*10)
