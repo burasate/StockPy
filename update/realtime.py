@@ -93,20 +93,23 @@ def GetAllRealtime (recordData=True,cleanupData=True):
         print(row['Quote'])
 
         # Send Sell Buy from last
-        sendBuy = df_realtime[(df_realtime['quote'] == row['Quote']) &
-                              (df_realtime['preset'] == row['Preset'])].groupby(['quote', 'preset'])[
-            'sendBuy'].tail(1).tolist()
-        sendSell = df_realtime[(df_realtime['quote'] == row['Quote']) &
-                               (df_realtime['preset'] == row['Preset'])].groupby(['quote', 'preset'])[
-            'sendSell'].tail(1).tolist()
-        if sendBuy != []:
-            sendBuy = sendBuy[0]
-        else:
-            sendBuy = 0
-        if sendSell != []:
-            sendSell = sendSell[0]
-        else:
-            sendSell = 0
+        sendBuy = 'no'
+        sendSell = 'no'
+        if realtimeData != []:
+            sendBuy = df_realtime[(df_realtime['quote'] == row['Quote']) &
+                                  (df_realtime['preset'] == row['Preset'])].groupby(['quote', 'preset'])[
+                'sendBuy'].tail(1).tolist()
+            sendSell = df_realtime[(df_realtime['quote'] == row['Quote']) &
+                                   (df_realtime['preset'] == row['Preset'])].groupby(['quote', 'preset'])[
+                'sendSell'].tail(1).tolist()
+            if sendBuy != []:
+                sendBuy = sendBuy[0]
+            else:
+                sendBuy = 'no'
+            if sendSell != []:
+                sendSell = sendSell[0]
+            else:
+                sendSell = 'yes'
 
         #Fill Collumn
         data = GetRealtime(row['Quote'])
@@ -128,14 +131,14 @@ def GetAllRealtime (recordData=True,cleanupData=True):
                     data['signal'] = 'Entry'
                 #elif data['last'] > data['breakMidHigh']:
                     #data['signal'] = 'Entry'
-            if data['signal'] == 'Entry' and data['sendBuy'] == 0:
+            if data['signal'] == 'Entry' and data['sendBuy'] == 'no':
                 SendRealtimeSignal(row['Preset'], row['Quote'], 'buy', data['last'], data['breakLow'])
-                data['sendBuy'] = 1
-                data['sendSell'] = 0
-            elif data['signal'] == 'Exit' and data['sendSell'] == 0:
+                data['sendBuy'] = 'yes'
+                data['sendSell'] = 'no'
+            elif data['signal'] == 'Exit' and data['sendSell'] == 'no':
                 SendRealtimeSignal(row['Preset'], row['Quote'], 'sell', data['last'], data['breakLow'])
-                data['sendSell'] = 1
-                data['sendBuy'] = 0
+                data['sendSell'] = 'yes'
+                data['sendBuy'] = 'no'
         rec.append(data)
         #convert row to list and add row
         rowData = pd.DataFrame.from_records([data]).values.tolist()[0]
@@ -147,6 +150,7 @@ def GetAllRealtime (recordData=True,cleanupData=True):
         df_realtime.drop_duplicates(['quote','preset','hour','minute'],keep='last',inplace=True)
         df_realtime['sendBuy'] = df_realtime.groupby(['quote', 'preset'])['sendBuy'].transform('last')
         df_realtime['sendSell'] = df_realtime.groupby(['quote', 'preset'])['sendSell'].transform('last')
+        df_realtime = df_realtime[list(data)]
         df_realtime = df_realtime.tail(5000)
         df_realtime.to_csv(dataPath+'/realtime.csv',index=False)
         while True:
