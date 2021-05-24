@@ -81,7 +81,10 @@ def GetAllRealtime (recordData=True,cleanupData=True):
     df = df[df['Signal'] == 'Entry']
     df.reset_index(inplace=True)
 
-    realtimeData = gSheet.getAllDataS('Realtime')
+    realtimeData = []
+    while realtimeData == []:
+        realtimeData = gSheet.getAllDataS('Realtime')
+        time.sleep(10)
     df_realtime = pd.DataFrame.from_records(realtimeData)
 
     rec = []
@@ -129,8 +132,8 @@ def GetAllRealtime (recordData=True,cleanupData=True):
                     data['signal'] = 'Exit'
                 elif data['low'] < data['breakLow'] and data['last'] > data['breakLow']:
                     data['signal'] = 'Entry'
-                #elif data['last'] > data['breakMidHigh']:
-                    #data['signal'] = 'Entry'
+                elif data['last'] > data['breakMidHigh']:
+                    data['signal'] = 'Entry'
             if data['signal'] == 'Entry' and data['sendBuy'] == 'no':
                 SendRealtimeSignal(row['Preset'], row['Quote'], 'buy', data['last'], data['breakLow'])
                 data['sendBuy'] = 'yes'
@@ -142,8 +145,8 @@ def GetAllRealtime (recordData=True,cleanupData=True):
         rec.append(data)
         #convert row to list and add row
         rowData = pd.DataFrame.from_records([data]).values.tolist()[0]
-        if recordData:
-            gSheet.addRow('Realtime',rowData)
+        #if recordData:
+            #gSheet.addRow('Realtime',rowData)
         pprint.pprint(data)
     if recordData and cleanupData:
         df_realtime = df_realtime.append( pd.DataFrame.from_records(rec) )

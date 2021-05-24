@@ -26,4 +26,4 @@ if not os.name == 'nt': #Raspi
         else:
             os.system('cls||clear')
             print('SET Market is Close')
-            time.sleep(60*10)
+            time.sleep(60*5)
