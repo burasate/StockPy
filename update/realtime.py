@@ -69,7 +69,20 @@ def GetRealtime (Quote,connectCount = 5):
     data['value'] = dataList[9][1] * 1000
     return data
 
-def GetAllRealtime (recordData=True,cleanupData=True):
+def UpdateRealtimeDataSheet(forceUpdate=True):
+
+    while True:
+        if forceUpdate:
+            gSheet.updateFromCSV(dataPath+'/realtime.csv', 'Realtime')
+            time.sleep(6)
+            if gSheet.getAllDataS('Realtime') != []:
+                break
+        else:
+            if gSheet.getAllDataS('Realtime') != []:
+                gSheet.updateFromCSV(dataPath + '/realtime.csv', 'Realtime')
+                time.sleep(6)
+
+def GetAllRealtime (isMain=True):
     signalData = gSheet.getAllDataS('SignalRecord')
     df = pd.read_csv(dataPath + '/signal.csv')
     df = df.append(
@@ -135,32 +148,30 @@ def GetAllRealtime (recordData=True,cleanupData=True):
                 elif data['last'] > data['breakMidHigh']:
                     data['signal'] = 'Entry'
             if data['signal'] == 'Entry' and data['sendBuy'] == 'no':
-                SendRealtimeSignal(row['Preset'], row['Quote'], 'buy', data['last'], data['breakLow'])
                 data['sendBuy'] = 'yes'
                 data['sendSell'] = 'no'
+                if isMain:
+                    SendRealtimeSignal(row['Preset'], row['Quote'], 'buy', data['last'], data['breakLow'])
             elif data['signal'] == 'Exit' and data['sendSell'] == 'no':
-                SendRealtimeSignal(row['Preset'], row['Quote'], 'sell', data['last'], data['breakLow'])
                 data['sendSell'] = 'yes'
                 data['sendBuy'] = 'no'
+                if isMain:
+                    SendRealtimeSignal(row['Preset'], row['Quote'], 'sell', data['last'], data['breakLow'])
         rec.append(data)
         #convert row to list and add row
         rowData = pd.DataFrame.from_records([data]).values.tolist()[0]
         #if recordData:
             #gSheet.addRow('Realtime',rowData)
         pprint.pprint(data)
-    if recordData and cleanupData:
-        df_realtime = df_realtime.append( pd.DataFrame.from_records(rec) )
-        df_realtime.drop_duplicates(['quote','preset','hour','minute'],keep='last',inplace=True)
-        df_realtime['sendBuy'] = df_realtime.groupby(['quote', 'preset'])['sendBuy'].transform('last')
-        df_realtime['sendSell'] = df_realtime.groupby(['quote', 'preset'])['sendSell'].transform('last')
-        df_realtime = df_realtime[list(data)]
-        df_realtime = df_realtime.tail(15000)
-        df_realtime.to_csv(dataPath+'/realtime.csv',index=False)
-        while True:
-            gSheet.updateFromCSV(dataPath+'/realtime.csv', 'Realtime')
-            time.sleep(5)
-            if gSheet.getAllDataS('Realtime') != []:
-                break
+
+    df_realtime = df_realtime.append( pd.DataFrame.from_records(rec) )
+    df_realtime.drop_duplicates(['quote','preset','hour','minute'],keep='last',inplace=True)
+    df_realtime['sendBuy'] = df_realtime.groupby(['quote', 'preset'])['sendBuy'].transform('last')
+    df_realtime['sendSell'] = df_realtime.groupby(['quote', 'preset'])['sendSell'].transform('last')
+    df_realtime = df_realtime[list(data)]
+    df_realtime = df_realtime.tail(15000)
+    df_realtime.to_csv(dataPath+'/realtime.csv',index=False)
+    UpdateRealtimeDataSheet(forceUpdate=True)
 
 def getTokenByPreset(preset):
     data = []
@@ -188,39 +199,44 @@ def SendRealtimeSignal(preset,quote,side,price,cut):
         lineNotify.sendNotifyMassage(token,text)
         pass
 
-print('SET Real-Time Recorder')
-if os.name == 'nt': #Windows
-    while True:
-        try:
-            #pass
-            GetAllRealtime(recordData=True,cleanupData=True)
-            #time.sleep(60*5)
-        except:
-            print(IOError.strerror())
-
-else: #Raspi
-    time.sleep(60)
-    import update
-    while True:
-        try:
-            update.updateAllFile()
-            update.updateConfig()
-            update.updatePreset()
-            break
-        except:
-            pass
-    while True:
-        hour = int(dt.now().hour)
-        minute = int(dt.now().minute)
-        morning = isNowInTimePeriod(datetime.time(9, 55), datetime.time(12, 30), datetime.time(hour, minute))
-        afternoon = isNowInTimePeriod(datetime.time(14, 30), datetime.time(16, 45), datetime.time(hour, minute))
-        weekDay = int(dt.now().weekday())
-        if ( morning or afternoon ) and weekDay < 5:
+def Run (isMain=True):
+    print('SET Real-Time Recorder')
+    if os.name == 'nt': #Windows
+        while True:
             try:
-                GetAllRealtime()
-                #time.sleep(60*1)
-            except: pass
-        else:
-            os.system('cls||clear')
-            print('SET Market is Close')
-            time.sleep(60*10)
+                #pass
+                GetAllRealtime(isMain=False)
+                #time.sleep(60*5)
+            except:
+                print(IOError.strerror())
+
+    else: #Raspi
+        time.sleep(60)
+        import update
+        while True:
+            try:
+                update.updateAllFile()
+                update.updateConfig()
+                update.updatePreset()
+                break
+            except:
+                pass
+        while True:
+            hour = int(dt.now().hour)
+            minute = int(dt.now().minute)
+            morning = isNowInTimePeriod(datetime.time(9, 55), datetime.time(12, 30), datetime.time(hour, minute))
+            afternoon = isNowInTimePeriod(datetime.time(14, 30), datetime.time(16, 45), datetime.time(hour, minute))
+            weekDay = int(dt.now().weekday())
+            if ( morning or afternoon ) and weekDay < 5:
+                try:
+                    GetAllRealtime()
+                    #time.sleep(60*1)
+                except: pass
+            else:
+                os.system('cls||clear')
+                print('SET Market is Close')
+                UpdateRealtimeDataSheet(forceUpdate=False)
+                time.sleep(60*10)
+
+if __name__ == '__main__':
+    Run(isMain=True)
