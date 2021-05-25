@@ -235,7 +235,9 @@ def Run (isMain=True):
             else:
                 os.system('cls||clear')
                 print('SET Market is Close')
-                UpdateRealtimeDataSheet(forceUpdate=False)
+                try:
+                    UpdateRealtimeDataSheet(forceUpdate=False)
+                except:pass
                 time.sleep(60*10)
 
 if __name__ == '__main__':
