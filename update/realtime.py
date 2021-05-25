@@ -154,7 +154,7 @@ def GetAllRealtime (recordData=True,cleanupData=True):
         df_realtime['sendBuy'] = df_realtime.groupby(['quote', 'preset'])['sendBuy'].transform('last')
         df_realtime['sendSell'] = df_realtime.groupby(['quote', 'preset'])['sendSell'].transform('last')
         df_realtime = df_realtime[list(data)]
-        df_realtime = df_realtime.tail(5000)
+        df_realtime = df_realtime.tail(15000)
         df_realtime.to_csv(dataPath+'/realtime.csv',index=False)
         while True:
             gSheet.updateFromCSV(dataPath+'/realtime.csv', 'Realtime')
