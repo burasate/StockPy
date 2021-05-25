@@ -78,7 +78,7 @@ def UpdateRealtimeDataSheet(forceUpdate=True):
             if gSheet.getAllDataS('Realtime') != []:
                 break
         else:
-            if gSheet.getAllDataS('Realtime') != []:
+            if gSheet.getAllDataS('Realtime') == []:
                 gSheet.updateFromCSV(dataPath + '/realtime.csv', 'Realtime')
                 time.sleep(6)
 
@@ -238,6 +238,5 @@ def Run (isMain=True):
                 UpdateRealtimeDataSheet(forceUpdate=False)
                 time.sleep(60*10)
 
-print(__name__)
 if __name__ == '__main__':
     Run(isMain=True)
