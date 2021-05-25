@@ -70,17 +70,17 @@ def GetRealtime (Quote,connectCount = 5):
     return data
 
 def UpdateRealtimeDataSheet(forceUpdate=True):
-
     while True:
+        print('realtime sheet updating...')
         if forceUpdate:
             gSheet.updateFromCSV(dataPath+'/realtime.csv', 'Realtime')
-            time.sleep(6)
+            time.sleep(10)
             if gSheet.getAllDataS('Realtime') != []:
                 break
         else:
             if gSheet.getAllDataS('Realtime') == []:
                 gSheet.updateFromCSV(dataPath + '/realtime.csv', 'Realtime')
-                time.sleep(6)
+                time.sleep(10)
 
 def GetAllRealtime (isMain=True):
     signalData = gSheet.getAllDataS('SignalRecord')
