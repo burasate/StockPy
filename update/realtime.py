@@ -231,14 +231,17 @@ def Run (isMain=True):
                 try:
                     GetAllRealtime()
                     #time.sleep(60*1)
-                except: pass
+                except Exception as e:
+                    print(e)
             else:
                 os.system('cls||clear')
                 print('SET Market is Close')
                 try:
                     UpdateRealtimeDataSheet(forceUpdate=False)
-                except:pass
+                except Exception as e:
+                    print(e)
                 time.sleep(60*10)
 
 if __name__ == '__main__':
     Run(isMain=True)
+
