@@ -224,8 +224,8 @@ def Run (isMain=True):
         while True:
             hour = int(dt.now().hour)
             minute = int(dt.now().minute)
-            morning = isNowInTimePeriod(datetime.time(9, 55), datetime.time(12, 30), datetime.time(hour, minute))
-            afternoon = isNowInTimePeriod(datetime.time(14, 30), datetime.time(16, 45), datetime.time(hour, minute))
+            morning = isNowInTimePeriod(datetime.time(9, 45), datetime.time(12, 45), datetime.time(hour, minute))
+            afternoon = isNowInTimePeriod(datetime.time(14, 15), datetime.time(17, 15), datetime.time(hour, minute))
             weekDay = int(dt.now().weekday())
             if ( morning or afternoon ) and weekDay < 5:
                 try:
