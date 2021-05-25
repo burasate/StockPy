@@ -238,5 +238,6 @@ def Run (isMain=True):
                 UpdateRealtimeDataSheet(forceUpdate=False)
                 time.sleep(60*10)
 
+print(__name__)
 if __name__ == '__main__':
     Run(isMain=True)
