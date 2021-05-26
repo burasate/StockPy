@@ -74,7 +74,7 @@ def UpdateRealtimeDataSheet(forceUpdate=True):
         print('realtime sheet updating...')
         if forceUpdate:
             gSheet.updateFromCSV(dataPath+'/realtime.csv', 'Realtime')
-            time.sleep(10)
+            time.sleep(15)
             if gSheet.getAllDataS('Realtime') != []:
                 break
         else:
