@@ -78,9 +78,10 @@ def UpdateRealtimeDataSheet(forceUpdate=True):
             if gSheet.getAllDataS('Realtime') != []:
                 break
         else:
-            if gSheet.getAllDataS('Realtime') == []:
+            realtimeSheet = gSheet.getAllDataS('Realtime')
+            if realtimeSheet == []:
                 gSheet.updateFromCSV(dataPath + '/realtime.csv', 'Realtime')
-                time.sleep(10)
+                time.sleep(30)
 
 def GetAllRealtime (isMain=True):
     signalData = gSheet.getAllDataS('SignalRecord')
