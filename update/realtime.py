@@ -71,15 +71,15 @@ def GetRealtime (Quote,connectCount = 5):
 
 def UpdateRealtimeDataSheet(forceUpdate=True):
     while True:
-        print('realtime sheet updating...')
         if forceUpdate:
+            print('realtime sheet updating...')
             gSheet.updateFromCSV(dataPath+'/realtime.csv', 'Realtime')
             time.sleep(15)
             if gSheet.getAllDataS('Realtime') != []:
                 break
         else:
-            realtimeSheet = gSheet.getAllDataS('Realtime')
-            if realtimeSheet == []:
+            if gSheet.getAllDataS('Realtime') == []:
+                print('realtime sheet updating...')
                 gSheet.updateFromCSV(dataPath + '/realtime.csv', 'Realtime')
                 time.sleep(30)
 
