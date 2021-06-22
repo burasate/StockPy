@@ -241,7 +241,7 @@ def Run (isMain=True):
                     UpdateRealtimeDataSheet(forceUpdate=False)
                 except Exception as e:
                     print(e)
-                time.sleep(60*10)
+                time.sleep(60*5)
 
 if __name__ == '__main__':
     Run(isMain=True)

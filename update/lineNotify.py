@@ -41,6 +41,7 @@ def signalReportToUser(*_):
             token = configJson[user]['lineToken']
             preset = configJson[user]['preset']
             description = configJson[user]['description']
+            send_limit = configJson[user]['sendLimit']
 
             # Load Preset
             ps_value = presetJson[preset]["value"]
@@ -70,37 +71,48 @@ def signalReportToUser(*_):
             msg_signal = date + '\n' +\
                         'Preset Name \"{}\" '.format(preset) +\
                         '\n' + text_buy + text_sell
-            #print(msg_signal)
+            print(msg_signal)
 
-            sendNotifyMassage(token, msg_signal)
+            if not os.name == 'nt':
+                sendNotifyMassage(token, msg_signal)
 
-            #Send Images
-            for i in range(df[df['Preset'] == preset]['Preset'].count()):
+            #Send Entry Massage by Quote
+            send_df = df[(df['Preset'] == preset) & (df['Signal'] =='Entry')]
+            send_df = send_df.sort_values(by=['Chang_D%','Chang_W%','NDay_Drawdown%','Volume'], ascending=[True,True,True,False])
+            send_df.reset_index(inplace=True)
+            if 'index' in send_df.columns:
+                send_df = send_df.drop(columns=['index'])
+            send_df = send_df.head(send_limit)
+            print(send_df[['Quote','Chang_D%','Chang_W%','Volume']])
+
+            for i in range(send_df['Quote'].count()):
                 select = df[df['Preset'] == preset].iloc[i]
+
                 q_msg = '▹ {} {}   \n'.format(select['Quote'], select['Close'])+\
                         'Month Chg {}% \n'.format(select['Chang_M%'])+\
                         'Break Out {}/{}\n'.format(select['BreakOut_L'],select['BreakOut_H'])+\
                         'Risk {}% - {}%\n'.format(select['NDay_Drawdown%'].round(1),
                                                         select['Max_Drawdown%'].round(1))+ \
-                        'Value {} m'.format(select['Value_M'])
-                #print (q_msg)
+                        'Volume {}'.format(select['Volume'])
+                print (q_msg)
 
-                if bool(configJson[user]['image']):
+                if bool(configJson[user]['image']) and bool(configJson[user]['message']):
                     # try send image with timeout checking
                     timeOut = 10
                     for i in range(timeOut):
                         try:
                             imgFile = '{}_{}.png'.format(preset,select['Quote'])
-                            sendNotifyImageMsg(token, imgPath + imgFile, q_msg)
+                            if not os.name == 'nt':
+                                sendNotifyImageMsg(token, imgPath + imgFile, q_msg)
                             break
                         except:
                             if i >= timeOut:
                                 break
                             else:
                                 pass
-                else:
-                    sendNotifyMassage(token, q_msg)
-                    pass
+                elif bool(configJson[user]['message']) :
+                    if not os.name == 'nt':
+                        sendNotifyMassage(token, q_msg)
             try:
                 gSheet.setValue('Config',findKey='idName',findValue=user,key='lastSent',value=dateTime)
             except: pass
