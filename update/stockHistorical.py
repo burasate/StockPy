@@ -138,5 +138,5 @@ def LoadAllHist():
 if __name__ == '__main__' :
     #LoadAllHist()
     #LoadSetHist()
-    #LoadHist('UNIQ')
+    LoadHist('SUPER')
     pass

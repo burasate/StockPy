@@ -77,8 +77,12 @@ def signalReportToUser(*_):
                 sendNotifyMassage(token, msg_signal)
 
             #Send Entry Massage by Quote
-            send_df = df[(df['Preset'] == preset) & (df['Signal'] =='Entry')]
-            send_df = send_df.sort_values(by=['Chang_D%','Chang_W%','NDay_Drawdown%','Volume'], ascending=[True,True,True,False])
+            send_df = df[
+                (df['Preset'] == preset) &
+                (df['Signal'] =='Exit') &
+                (df['Signal'] == 'Entry')
+            ]
+            send_df = send_df.sort_values(by=['Chang_D%','Chang_W%','NDay_Drawdown%','Volume','Signal'], ascending=[True,True,True,False,False])
             send_df.reset_index(inplace=True)
             if 'index' in send_df.columns:
                 send_df = send_df.drop(columns=['index'])

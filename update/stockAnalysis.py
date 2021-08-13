@@ -155,7 +155,7 @@ def getAnalysis(csvPath,preset,saveImage=False,showImage=False):
 
         #Plot Setup
         plotTrimMin = 20
-        plotTrimMax = 110
+        plotTrimMax = 112
         axes[0].set_facecolor(pltColor['bg'])
         axes[0].set_xlim(plotTrimMin,plotTrimMax)
         #axes[0].grid(True, 'both', 'both',color = (.87,.87,.87))
@@ -194,6 +194,40 @@ def getAnalysis(csvPath,preset,saveImage=False,showImage=False):
         axes[1].set_title('Drawdown %', color=pltColor['text'], pad=2, size=10, y=0)
         axes[1].yaxis.tick_right()
 
+        # Resistance Density
+        for i in df.index.tolist():
+            row = df.loc[i]
+            axes[0].fill_between([102, 103], y1=row['High'], y2=max([row['Open'], row['Close']]),
+                                 # where=df['%K'] >= df['%D'],
+                                 linewidth=0, color=pltColor['red'],
+                                 linestyle='-', alpha=(row['Volume'] / df['Volume'].max()) / 6
+                                 )
+
+        # Support Density
+        for i in df.index.tolist():
+            row = df.loc[i]
+            axes[0].fill_between([101, 102], y1=row['Low'], y2=min([row['Open'], row['Close']]),
+                                 # where=df['%K'] >= df['%D'],
+                                 linewidth=0, color=pltColor['blue'],
+                                 linestyle='-', alpha=(row['Volume'] / df['Volume'].max()) / 6
+                                 )
+
+        # Stick
+        for i in df.index.tolist():
+            row = df.loc[i]
+            if row['Open'] >= row['Close']: #Red
+                axes[0].bar(x=row['Day'],height=row['Open']-row['Close'],bottom=row['Close'],
+                            linewidth=0,color=pltColor['red'], linestyle=':', alpha=1
+                            )
+                axes[0].vlines(row['Day'], row['Open'], row['High'], linewidth=.8, color=(.3, .3, .3))
+                axes[0].vlines(row['Day'], row['Low'], row['Close'], linewidth=.8, color=(.3, .3, .3))
+            else:
+                axes[0].bar(x=row['Day'], height=row['Open'] - row['Close'], bottom=row['Close'],
+                            linewidth=0, color=pltColor['green'], linestyle=':', alpha=1
+                            )
+                axes[0].vlines(row['Day'], row['Close'], row['High'], linewidth=.8, color=(.3, .3, .3))
+                axes[0].vlines(row['Day'], row['Low'], row['Open'], linewidth=.8, color=(.3, .3, .3))
+
         # Line Plot
         axes[0].plot(df['Day'], df['BreakOut_H'], linewidth=.7, color=pltColor['green'], linestyle='-')
         axes[0].plot(df['Day'], df['BreakOut_L'], linewidth=.7, color=pltColor['red'], linestyle='-')
@@ -205,12 +239,13 @@ def getAnalysis(csvPath,preset,saveImage=False,showImage=False):
         #axes[0].plot([100, 120], [df['BreakOut_L'][0], df['BreakOut_L'][0]], linewidth=.7, color=pltColor['red'], linestyle='-',alpha = 1)
         #axes[0].plot([100, 120], [df['BreakOut_M'][0], df['BreakOut_M'][0]], linewidth=.7, color=pltColor['yellow'], linestyle=':',alpha = 1)
 
-        axes[0].plot(df['Day'], clh, color=(.5,.5,.5), linewidth=1, marker='', markersize=1)
-        axes[0].plot(df['Day'][0], clh[0], color=(.5,.5,.5), linewidth=1, marker='o', markersize=5)
-        axes[0].plot(df['Day'], h_plt, color=(0.25, 0.25, 0.25), linewidth=.4, linestyle=':', marker='', markersize=.5)
-        axes[0].plot(df['Day'], l_plt, color=(0.25, 0.25, 0.25), linewidth=.4, linestyle=':', marker='', markersize=.5)
-        axes[0].plot(df['Day'], clh_np, linewidth=.5, color=(0.25, 0.25, 0.25), linestyle=':')
+        #axes[0].plot(df['Day'], clh, color=(.5,.5,.5), linewidth=1, marker='', markersize=1)
+        #axes[0].plot(df['Day'][0], clh[0], color=(.5,.5,.5), linewidth=1, marker='o', markersize=5)
+        #axes[0].plot(df['Day'], h_plt, color=(0.25, 0.25, 0.25), linewidth=.4, linestyle=':', marker='', markersize=.5)
+        #axes[0].plot(df['Day'], l_plt, color=(0.25, 0.25, 0.25), linewidth=.4, linestyle=':', marker='', markersize=.5)
+        #axes[0].plot(df['Day'], clh_np, linewidth=.5, color=(0.25, 0.25, 0.25), linestyle=':')
 
+        """
         # Test Signal
         axes[0].plot(df[df['SMA_S'] > df['SMA_L']][df['%K'] > df['%D']][df['GL_Ratio'] > df['GL_Ratio_Slow']]['Day'],
                      df[df['SMA_S'] > df['SMA_L']][df['%K'] > df['%D']][df['GL_Ratio'] > df['GL_Ratio_Slow']]['Close'],
@@ -218,6 +253,7 @@ def getAnalysis(csvPath,preset,saveImage=False,showImage=False):
         axes[0].plot(df[df['SMA_S'] < df['SMA_L']][df['GL_Ratio'] < df['GL_Ratio_Slow']]['Day'],
                      df[df['SMA_S'] < df['SMA_L']][df['GL_Ratio'] < df['GL_Ratio_Slow']]['Close'],
                      linewidth=0, color=pltColor['red'], linestyle='-', marker='o', markersize=4)
+        """
 
         axes[5].fill_between(df['Day'], y1=df['%K'], y2=df['%D'],
                              where=df['%K'] >= df['%D'], linewidth=1, color=(.5, .5, .5),
@@ -276,13 +312,13 @@ def getAnalysis(csvPath,preset,saveImage=False,showImage=False):
         # Text
         axes[0].text(plotTrimMax-3, min(df['Low']), 'by Burasate.U', size=12, ha='right', va='top', color=(.5,.5,.5))
         close_l_percenttage = round(((df['Close'][0]-df['BreakOut_L'][0])/df['Close'][0])*100,2)
-        axes[0].text(100, df['BreakOut_L'][0],
-                     '  ' + '{} (-{}%)'.format( df['BreakOut_L'][0],close_l_percenttage ),
+        axes[0].text(104, df['BreakOut_L'][0],
+                     '  ' + '{} \n(-{}%)'.format( df['BreakOut_L'][0],close_l_percenttage ),
                      size=10, ha='left', va='center',
                      color=pltColor['text'])
         close_h_percenttage = round(((df['BreakOut_H'][0]-df['Close'][0])/df['Close'][0])*100,2)
-        axes[0].text(100, df['BreakOut_H'][0],
-                     '  ' + '{} (+{}%)'.format( df['BreakOut_H'][0],close_h_percenttage ),
+        axes[0].text(104, df['BreakOut_H'][0],
+                     '  ' + '{} \n(+{}%)'.format( df['BreakOut_H'][0],close_h_percenttage ),
                      size=10, ha='left', va='center',
                      color=pltColor['text'])
         #axes[0].text(100, df['BreakOut_M'][0], '  ' + str(df['BreakOut_M'][0]), size=10, ha='left', va='center',
@@ -589,16 +625,16 @@ def backTesting(quote,preset):
 
 
 if __name__ == '__main__' :
-    import update
-    update.updatePreset()
-    presetPath = dataPath + '/preset.json'
-    presetJson = json.load(open(presetPath))
+    #import update
+    #update.updatePreset()
+    #presetPath = dataPath + '/preset.json'
+    #presetJson = json.load(open(presetPath))
 
     #import stockHistorical
     #stockHistorical.LoadHist('IVL')
-    #getAnalysis(histPath + 'IVL' + '.csv', 'S4',saveImage=False,showImage=True)
-    getSignalAllPreset()
-    uploadSignalData()
+    getAnalysis(histPath + 'IVL' + '.csv', 'S4',saveImage=False,showImage=True)
+    #getSignalAllPreset()
+    #uploadSignalData()
 
     """
     # Backtesting...
