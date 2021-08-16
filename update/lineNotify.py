@@ -82,14 +82,14 @@ def signalReportToUser(*_):
                     (df['Preset'] == preset) &
                     (df['Signal'] == 'Exit')
                 ].sort_values(by=['Chang_D%','Chang_W%','NDay_Drawdown%','Volume','Signal'],
-                              ascending=[True,True,True,False,False],inplace=True)
-            exit_df = exit_df.head(send_limit)
+                              ascending=[True,True,True,False,False])
+            exit_df = exit_df.head( int(round(send_limit/2,0)) )
             entry_df = df[
                 (df['Preset'] == preset) &
                 (df['Signal'] == 'Entry')
                 ].sort_values(by=['Chang_D%', 'Chang_W%', 'NDay_Drawdown%', 'Volume', 'Signal'],
-                              ascending=[True, True, True, False, False], inplace=True)
-            entry_df = entry_df.head(send_limit)
+                              ascending=[True, True, True, False, False])
+            entry_df = entry_df.head(int(round(send_limit/2,0)))
             send_df = send_df.append(exit_df)
             send_df = send_df.append(entry_df)
             #send_df = send_df.sort_values(by=['Chang_D%','Chang_W%','NDay_Drawdown%','Volume','Signal'], ascending=[True,True,True,False,False])
