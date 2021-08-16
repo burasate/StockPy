@@ -78,25 +78,25 @@ def signalReportToUser(*_):
 
             #Send Entry Massage by Quote
             send_df = pd.DataFrame()
-            send_df = send_df.append(
-                df[
+            exit_df = df[
                     (df['Preset'] == preset) &
                     (df['Signal'] == 'Exit')
                 ].sort_values(by=['Chang_D%','Chang_W%','NDay_Drawdown%','Volume','Signal'],
-                              ascending=[True,True,True,False,False],inplace=True).head(send_limit)
-            )
-            send_df = send_df.append(
-                df[
-                    (df['Preset'] == preset) &
-                    (df['Signal'] == 'Entry')
-                    ].sort_values(by=['Chang_D%', 'Chang_W%', 'NDay_Drawdown%', 'Volume', 'Signal'],
-                                  ascending=[True, True, True, False, False], inplace=True).head(send_limit)
-            )
+                              ascending=[True,True,True,False,False],inplace=True)
+            exit_df = exit_df.head(send_limit)
+            entry_df = df[
+                (df['Preset'] == preset) &
+                (df['Signal'] == 'Entry')
+                ].sort_values(by=['Chang_D%', 'Chang_W%', 'NDay_Drawdown%', 'Volume', 'Signal'],
+                              ascending=[True, True, True, False, False], inplace=True)
+            entry_df = entry_df.head(send_limit)
+            send_df = send_df.append(exit_df)
+            send_df = send_df.append(entry_df)
             #send_df = send_df.sort_values(by=['Chang_D%','Chang_W%','NDay_Drawdown%','Volume','Signal'], ascending=[True,True,True,False,False])
             send_df.reset_index(inplace=True)
             if 'index' in send_df.columns:
                 send_df = send_df.drop(columns=['index'])
-            send_df = send_df.head(send_limit)
+            #send_df = send_df.head(send_limit)
             print(send_df[['Quote','Chang_D%','Chang_W%','Volume']])
 
             for i in range(send_df['Quote'].count()):
