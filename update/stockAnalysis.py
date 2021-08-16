@@ -134,12 +134,13 @@ def getAnalysis(csvPath,preset,saveImage=False,showImage=False):
     if saveImage or showImage:
         # Plot Figure
         pltColor = {
-            'bg' : (.9, .9, .9),
-            'text' : (.4, .4, .4),
-            'red' : (0.8, 0.4, 0),
-            'green' : (0.4, 0.8, 0),
-            'blue' : (0, 0.7, 0.9),
-            'yellow' : (.9, .6, 0)
+            'bg': (.9, .9, .9),
+            'text': (.4, .4, .4),
+            'red': (0.8, 0.4, 0),
+            'green': (0.4, 0.8, 0),
+            'blue': (0, 0.7, 0.9),
+            'cyan': (0.1, 0.5, 1),
+            'yellow': (.9, .6, 0)
         }
         fig, axes = plt.subplots(nrows=6, ncols=1, figsize=(11, 11), dpi=100,
                                  sharex=True, sharey=False,
@@ -197,19 +198,19 @@ def getAnalysis(csvPath,preset,saveImage=False,showImage=False):
         # Resistance Density
         for i in df.index.tolist():
             row = df.loc[i]
-            axes[0].fill_between([102, 103], y1=row['High'], y2=max([row['Open'], row['Close']]),
+            axes[0].fill_between([row['Day'], plotTrimMax], y1=row['High'], y2=max([row['Open'], row['Close']]),
                                  # where=df['%K'] >= df['%D'],
-                                 linewidth=0, color=pltColor['red'],
-                                 linestyle='-', alpha=(row['Volume'] / df['Volume'].max()) / 6
+                                 linewidth=0, color=(.8,0.1,0.7),
+                                 linestyle='-', alpha=(row['Volume'] / df['Volume'].max()) / 8
                                  )
 
         # Support Density
         for i in df.index.tolist():
             row = df.loc[i]
-            axes[0].fill_between([101, 102], y1=row['Low'], y2=min([row['Open'], row['Close']]),
+            axes[0].fill_between([row['Day'], plotTrimMax], y1=row['Low'], y2=min([row['Open'], row['Close']]),
                                  # where=df['%K'] >= df['%D'],
-                                 linewidth=0, color=pltColor['blue'],
-                                 linestyle='-', alpha=(row['Volume'] / df['Volume'].max()) / 6
+                                 linewidth=0, color=pltColor['cyan'],
+                                 linestyle='-', alpha=(row['Volume'] / df['Volume'].max()) / 8
                                  )
 
         # Stick
@@ -241,6 +242,7 @@ def getAnalysis(csvPath,preset,saveImage=False,showImage=False):
 
         #axes[0].plot(df['Day'], clh, color=(.5,.5,.5), linewidth=1, marker='', markersize=1)
         #axes[0].plot(df['Day'][0], clh[0], color=(.5,.5,.5), linewidth=1, marker='o', markersize=5)
+        axes[0].plot(102, clh[0], color=(.3, .3, .3), linewidth=1, marker='<', markersize=6)
         #axes[0].plot(df['Day'], h_plt, color=(0.25, 0.25, 0.25), linewidth=.4, linestyle=':', marker='', markersize=.5)
         #axes[0].plot(df['Day'], l_plt, color=(0.25, 0.25, 0.25), linewidth=.4, linestyle=':', marker='', markersize=.5)
         #axes[0].plot(df['Day'], clh_np, linewidth=.5, color=(0.25, 0.25, 0.25), linestyle=':')
@@ -437,6 +439,7 @@ def getSignalAllPreset(*_):
                     print('Preset : {} | Exit : {}'.format(ps, file))
                     df['Signal'] = 'Exit'
                     signal_df = signal_df.append(df.iloc[0])
+                    getAnalysis(histPath + os.sep + file, ps, saveImage=True, showImage=False)
                 elif filter_condition and df['Buy_Score'][0] >= df['Buy_Score'].max()-1:
                     signal_df = signal_df.append(df.iloc[0])
 
@@ -632,7 +635,7 @@ if __name__ == '__main__' :
 
     #import stockHistorical
     #stockHistorical.LoadHist('IVL')
-    getAnalysis(histPath + 'IVL' + '.csv', 'S4',saveImage=False,showImage=True)
+    getAnalysis(histPath + 'TPIPP' + '.csv', 'S4',saveImage=False,showImage=True)
     #getSignalAllPreset()
     #uploadSignalData()
 
