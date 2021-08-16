@@ -35,7 +35,7 @@ def signalReportToUser(*_):
     import datetime as dt
     date = dt.date.today().strftime('%d/%m/%Y')
     dateTime = dt.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    import stockAnalysis
+    #import stockAnalysis
     for user in configJson:
         if bool(configJson[user]['active']):
             token = configJson[user]['lineToken']
@@ -77,12 +77,22 @@ def signalReportToUser(*_):
                 sendNotifyMassage(token, msg_signal)
 
             #Send Entry Massage by Quote
-            send_df = df[
-                (df['Preset'] == preset) &
-                (df['Signal'] =='Exit') &
-                (df['Signal'] == 'Entry')
-            ]
-            send_df = send_df.sort_values(by=['Chang_D%','Chang_W%','NDay_Drawdown%','Volume','Signal'], ascending=[True,True,True,False,False])
+            send_df = pd.DataFrame()
+            send_df = send_df.append(
+                df[
+                    (df['Preset'] == preset) &
+                    (df['Signal'] == 'Exit')
+                ].sort_values(by=['Chang_D%','Chang_W%','NDay_Drawdown%','Volume','Signal'],
+                              ascending=[True,True,True,False,False],inplace=True).head(send_limit)
+            )
+            send_df = send_df.append(
+                df[
+                    (df['Preset'] == preset) &
+                    (df['Signal'] == 'Entry')
+                    ].sort_values(by=['Chang_D%', 'Chang_W%', 'NDay_Drawdown%', 'Volume', 'Signal'],
+                                  ascending=[True, True, True, False, False], inplace=True).head(send_limit)
+            )
+            #send_df = send_df.sort_values(by=['Chang_D%','Chang_W%','NDay_Drawdown%','Volume','Signal'], ascending=[True,True,True,False,False])
             send_df.reset_index(inplace=True)
             if 'index' in send_df.columns:
                 send_df = send_df.drop(columns=['index'])
