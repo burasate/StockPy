@@ -22,4 +22,4 @@ stockAnalysis.getSignalAllPreset()
 stockAnalysis.uploadSignalData()
 
 import lineNotify
-#lineNotify.signalReportToUser()
+lineNotify.signalReportToUser()
