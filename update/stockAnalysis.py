@@ -635,7 +635,7 @@ if __name__ == '__main__' :
 
     #import stockHistorical
     #stockHistorical.LoadHist('IVL')
-    getAnalysis(histPath + 'TPIPP' + '.csv', 'S4',saveImage=False,showImage=True)
+    getAnalysis(histPath + 'TGPRO' + '.csv', 'S4',saveImage=False,showImage=True)
     #getSignalAllPreset()
     #uploadSignalData()
 

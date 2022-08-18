@@ -11,7 +11,9 @@ with open(dataPath+'/quote.json', 'r') as f:
 
 def LoadHist (Quote,connectCount = 5):
     df = pd.DataFrame()
-    url = 'https://www.settrade.com/C04_02_stock_historical_p1.jsp?txtSymbol={}&ssoPageId=10&&selectPage=2&max=101&offset=0'.format(Quote)
+    #url = 'https://www.settrade.com/th/equities/quote/super/historical-trading'
+    url = 'https://classic.settrade.com/C04_02_stock_historical_p1.jsp?txtSymbol={}&ssoPageId=10&&selectPage=2&max=101&offset=0'.format(Quote)
+    #url = 'https://www.settrade.com/C04_02_stock_historical_p1.jsp?txtSymbol={}&ssoPageId=10&&selectPage=2&max=101&offset=0'.format(Quote)
     #url = 'https://finance.yahoo.com/quote/' + Quote + '.BK/history'
     for i in range(connectCount):
         try :
@@ -22,6 +24,7 @@ def LoadHist (Quote,connectCount = 5):
     soup = BeautifulSoup(c, 'html.parser')
     price_data = soup.find_all('tbody')
     index = 0
+    #print(price_data)
     #print(price_data[0].find_all('tr'))
     for row in price_data[0].find_all('tr'):
         col = row.find_all('td')
@@ -76,8 +79,8 @@ def LoadSetHist() :
         col = col+1
 
     csv_data.append(col_append)
-    #print(csv_data)
-    print('SET Index Performance  {}\n3M : {}%\n6M : {}%\nYTD : {}%'.format(col_append[0],col_append[1],col_append[2],col_append[3]))
+    csv_data = [i for i in csv_data if len(i) >= 4]
+    print('SET Index Performance  {}\n3M : {}%\n6M : {}%\nYTD : {}%'.format(csv_data[-1][0],csv_data[-1][1],csv_data[-1][2],csv_data[-1][3]))
     #print(header_list)
     #print(col_append)
 

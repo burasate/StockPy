@@ -1,8 +1,8 @@
 import time,os
 print('StockPy')
-time.sleep(30)
 
 if not os.name == 'nt':
+    time.sleep(30)
     import update
     while True:
         try:
@@ -22,4 +22,4 @@ stockAnalysis.getSignalAllPreset()
 stockAnalysis.uploadSignalData()
 
 import lineNotify
-lineNotify.signalReportToUser()
+#lineNotify.signalReportToUser()
